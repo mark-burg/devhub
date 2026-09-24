@@ -1,0 +1,139 @@
+# Example: publishing reports from other tools. Each job is independent — keep the ones you use.
+# Stats and metrics (tests, coverage %, Lighthouse scores) are detected and charted automatically.
+name: Quality reports
+
+on:
+  push:
+    branches: [main]
+
+env:
+  HUB_REPO: OWNER/devhub
+
+jobs:
+  playwright-html:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npx playwright install --with-deps
+      # reporter: [["html", { open: "never" }], ["json", { outputFile: "results.json" }]]
+      - run: npx playwright test
+      - uses: OWNER/devhub@main
+        if: ${{ !cancelled() }}
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: web-app
+          report: playwright
+          type: playwright
+          report-dir: playwright-report
+          stats-file: results.json
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx vitest run --coverage --coverage.reporter=html --coverage.reporter=json-summary
+      - uses: OWNER/devhub@main
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: web-app
+          report: coverage
+          title: Unit coverage
+          type: coverage
+          report-dir: coverage
+
+  bundle-size:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+      - id: size
+        run: echo "kb=$(du -sk dist | cut -f1)" >> "$GITHUB_OUTPUT"
+      # Numbers only — no report files. Trended on the project page; describe the
+      # metric in hub.config.json ("better": "lower", "unit": "kB").
+      - uses: OWNER/devhub@main
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: web-app
+          report: bundle
+          title: Bundle size
+          metrics: |
+            bundle.size=${{ steps.size.outputs.kb }}
+
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+      - run: npx @lhci/cli@0.14 collect --staticDistDir=dist && npx @lhci/cli@0.14 upload --target=filesystem --outputDir=lhci
+      - uses: OWNER/devhub@main
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: web-app
+          report: lighthouse
+          type: lighthouse
+          report-dir: lhci
+
+  pytest-junit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt pytest pytest-html pytest-cov
+      - run: pytest --html=report/index.html --self-contained-html --junitxml=report/junit.xml --cov=src --cov-report=html --cov-report=json:htmlcov/coverage.json
+      - uses: OWNER/devhub@main
+        if: ${{ !cancelled() }}
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: payments-api
+          report: unit
+          report-dir: report
+          junit: report/junit.xml
+      - uses: OWNER/devhub@main
+        if: ${{ !cancelled() }}
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: payments-api
+          report: coverage
+          type: coverage
+          report-dir: htmlcov
+
+  storybook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npx storybook build -o storybook-static
+      - uses: OWNER/devhub@main
+        with:
+          hub-repo: ${{ env.HUB_REPO }}
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: design-system
+          report: storybook
+          title: Storybook
+          type: storybook
+          report-dir: storybook-static
+          keep: 5
+
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run bench | tee bench.txt
+      # Writes bench/web-app/data.js onto the hub's gh-pages branch; add a nav item
+      # { "type": "benchmark", "src": "bench/web-app/data.js" } to hub.config.json.
+      - uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: benchmarkjs
+          output-file-path: bench.txt
+          github-token: ${{ secrets.DEVHUB_TOKEN }}
+          gh-repository: github.com/${{ env.HUB_REPO }}
+          benchmark-data-dir-path: bench/web-app
+          auto-push: true

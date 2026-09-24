@@ -1,0 +1,295 @@
+name: "devhub publish"
+description: "Publish an Allure 3 report (with history) or any static HTML report — coverage, Playwright, Lighthouse, docs — into a GitHub Pages dev hub."
+author: "devhub"
+branding:
+  icon: "layers"
+  color: "blue"
+
+inputs:
+  project:
+    description: "Project id in the hub, e.g. web-app (lowercase, dashes)"
+    required: true
+  report:
+    description: "Report channel within the project, e.g. e2e, unit, coverage, lighthouse"
+    required: false
+    default: "tests"
+  title:
+    description: "Display name of the report channel (default: derived from the id)"
+    required: false
+    default: ""
+  project-title:
+    description: "Display name of the project (default: derived from the id)"
+    required: false
+    default: ""
+  type:
+    description: "allure | playwright | coverage | lighthouse | html | … (default: allure when allure-results is set, else detected)"
+    required: false
+    default: ""
+
+  allure-results:
+    description: "Allure results directory (one per line for several). The action generates an Allure 3 report and keeps its history in the hub."
+    required: false
+    default: ""
+  allure-version:
+    description: "Allure CLI version for `npx allure@<version>`"
+    required: false
+    default: "3"
+  allure-config:
+    description: "Optional allurerc.mjs to extend (plugins, categories, quality gate…). output/historyPath are set by the action."
+    required: false
+    default: ""
+  allure-history-limit:
+    description: "History entries kept for Allure's trend and flaky detection"
+    required: false
+    default: "30"
+
+  report-dir:
+    description: "A ready-made report to publish instead: a directory containing index.html, or a single .html file"
+    required: false
+    default: ""
+  entry:
+    description: "Page inside the report to open (default: index.html, or detected)"
+    required: false
+    default: ""
+  stats-file:
+    description: "Test stats for non-Allure reports: Playwright JSON report, Allure summary.json, or {passed, failed, …}"
+    required: false
+    default: ""
+  junit:
+    description: "JUnit XML file(s) or directories to compute test stats from (one per line)"
+    required: false
+    default: ""
+  metrics:
+    description: "Extra numeric metrics, one `name=value` per line (e.g. bundle.size=412)"
+    required: false
+    default: ""
+
+  run-id:
+    description: "Folder name for this run (default: the workflow run number)"
+    required: false
+    default: ""
+  label:
+    description: "Short run label shown in the UI (default: #<run number>)"
+    required: false
+    default: ""
+  keep:
+    description: "Report folders to keep per channel; older runs are pruned but stay in the trend charts"
+    required: false
+    default: "20"
+  history:
+    description: "Runs to keep in the manifest (trend depth)"
+    required: false
+    default: "200"
+
+  hub-repo:
+    description: "owner/name of the hub repository (default: the current repository)"
+    required: false
+    default: ${{ github.repository }}
+  hub-branch:
+    description: "Branch GitHub Pages serves the hub from"
+    required: false
+    default: "gh-pages"
+  token:
+    description: "Token with contents:write on hub-repo. The default GITHUB_TOKEN only works for the current repository."
+    required: false
+    default: ${{ github.token }}
+  base-url:
+    description: "Public URL of the hub (default: https://<owner>.github.io/<repo>/)"
+    required: false
+    default: ""
+  fail-on-test-failure:
+    description: "Fail this step (after publishing) when the run has failed or broken tests"
+    required: false
+    default: "false"
+
+outputs:
+  url:
+    description: "Link to this run inside the hub"
+    value: ${{ steps.publish.outputs.url }}
+  report-url:
+    description: "Direct link to the published report files"
+    value: ${{ steps.publish.outputs.report-url }}
+  badge-url:
+    description: "shields.io badge URL for this report channel"
+    value: ${{ steps.publish.outputs.badge-url }}
+  run-id:
+    description: "Folder name of the published run"
+    value: ${{ steps.publish.outputs.run-id }}
+  status:
+    description: "passed | failed | broken | unknown (empty for reports without test stats)"
+    value: ${{ steps.publish.outputs.status }}
+  total:
+    description: "Total tests"
+    value: ${{ steps.publish.outputs.total }}
+  passed:
+    description: "Passed tests"
+    value: ${{ steps.publish.outputs.passed }}
+  failed:
+    description: "Failed tests"
+    value: ${{ steps.publish.outputs.failed }}
+  broken:
+    description: "Broken tests"
+    value: ${{ steps.publish.outputs.broken }}
+  skipped:
+    description: "Skipped tests"
+    value: ${{ steps.publish.outputs.skipped }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check out the hub's Pages branch
+      id: prep
+      shell: bash
+      env:
+        HUB_REPO: ${{ inputs.hub-repo }}
+        HUB_BRANCH: ${{ inputs.hub-branch }}
+        HUB_TOKEN: ${{ inputs.token }}
+        IN_RESULTS: ${{ inputs.allure-results }}
+        IN_REPORT_DIR: ${{ inputs.report-dir }}
+        IN_STATS: ${{ inputs.stats-file }}
+        IN_JUNIT: ${{ inputs.junit }}
+        IN_METRICS: ${{ inputs.metrics }}
+      run: |
+        set -euo pipefail
+        if [ -z "$IN_RESULTS$IN_REPORT_DIR$IN_STATS$IN_JUNIT$IN_METRICS" ]; then
+          echo "::error::Nothing to publish — set allure-results, report-dir, stats-file, junit or metrics."
+          exit 1
+        fi
+        if [ -n "$IN_RESULTS" ] && [ -n "$IN_REPORT_DIR" ]; then
+          echo "::error::Set either allure-results or report-dir, not both."
+          exit 1
+        fi
+        work="$RUNNER_TEMP/devhub-$GITHUB_RUN_ID-$RANDOM"
+        mkdir -p "$work"
+        echo "work=$work" >> "$GITHUB_OUTPUT"
+        source "$GITHUB_ACTION_PATH/scripts/pages-lib.sh"
+        pages_clone "$work/pages"
+
+    - name: Generate Allure report
+      id: allure
+      if: inputs.allure-results != ''
+      shell: bash
+      env:
+        WORK: ${{ steps.prep.outputs.work }}
+        PROJECT: ${{ inputs.project }}
+        REPORT: ${{ inputs.report }}
+        RESULTS: ${{ inputs.allure-results }}
+        ALLURE_VERSION: ${{ inputs.allure-version }}
+        USER_CONFIG: ${{ inputs.allure-config }}
+        HLIMIT: ${{ inputs.allure-history-limit }}
+        REPORT_NAME: ${{ inputs.title || format('{0} · {1}', inputs.project-title || inputs.project, inputs.report) }}
+      run: |
+        set -euo pipefail
+        dirs=()
+        while IFS= read -r line; do
+          line="$(echo "$line" | xargs)"
+          [ -z "$line" ] && continue
+          if [ -d "$line" ]; then dirs+=("$line"); else echo "::warning::Allure results directory not found: $line"; fi
+        done <<< "$RESULTS"
+        if [ ${#dirs[@]} -eq 0 ]; then
+          echo "::error::No Allure results found — did the tests run and write allure-results?"
+          exit 1
+        fi
+
+        stored="$(node "$GITHUB_ACTION_PATH/scripts/hub.mjs" history-path --site "$WORK/pages" --project "$PROJECT" --report "$REPORT")"
+        export HIST="$WORK/history.jsonl" OUT="$WORK/allure-report"
+        if [ -f "$stored" ]; then cp "$stored" "$HIST"; echo "Restored $(wc -l < "$HIST" | xargs) history entries."; fi
+
+        node - "$WORK/allurerc.mjs" <<'JS'
+        const { writeFileSync } = require("fs");
+        const { resolve } = require("path");
+        const { pathToFileURL } = require("url");
+        const e = process.env;
+        const forced = { output: e.OUT, historyPath: e.HIST, historyLimit: Number(e.HLIMIT) || 30 };
+        let src;
+        if (e.USER_CONFIG) {
+          const url = pathToFileURL(resolve(e.USER_CONFIG)).href;
+          src = `import base from ${JSON.stringify(url)};\n` +
+            `const cfg = typeof base === "function" ? await base() : base;\n` +
+            `export default { ...cfg, ...${JSON.stringify(forced)} };\n`;
+        } else {
+          src = `export default ${JSON.stringify({ name: e.REPORT_NAME, ...forced, plugins: { awesome: { options: { reportName: e.REPORT_NAME } } } }, null, 2)};\n`;
+        }
+        writeFileSync(process.argv[2], src);
+        JS
+
+        set +e
+        npx --yes "allure@${ALLURE_VERSION}" generate --config "$WORK/allurerc.mjs" "${dirs[@]}"
+        code=$?
+        set -e
+        if [ ! -f "$OUT/index.html" ] && ! ls "$OUT"/*/index.html >/dev/null 2>&1; then
+          echo "::error::allure generate did not produce a report (exit code $code)."
+          exit 1
+        fi
+        if [ "$code" -ne 0 ]; then
+          echo "::warning::allure generate exited with $code (quality gate?) — publishing the report anyway."
+        fi
+        echo "source=$OUT" >> "$GITHUB_OUTPUT"
+        echo "history=$HIST" >> "$GITHUB_OUTPUT"
+
+    - name: Publish to the hub
+      id: publish
+      shell: bash
+      env:
+        WORK: ${{ steps.prep.outputs.work }}
+        HUB_REPO: ${{ inputs.hub-repo }}
+        HUB_BRANCH: ${{ inputs.hub-branch }}
+        HUB_TOKEN: ${{ inputs.token }}
+        DEVHUB_REPO: ${{ inputs.hub-repo }}
+        SOURCE: ${{ steps.allure.outputs.source || inputs.report-dir }}
+        HISTORY_FILE: ${{ steps.allure.outputs.history }}
+        PROJECT: ${{ inputs.project }}
+        REPORT: ${{ inputs.report }}
+        TITLE: ${{ inputs.title }}
+        PROJECT_TITLE: ${{ inputs.project-title }}
+        TYPE: ${{ inputs.type || (inputs.allure-results != '' && 'allure' || '') }}
+        ENTRY: ${{ inputs.entry }}
+        STATS_FILE: ${{ inputs.stats-file }}
+        JUNIT: ${{ inputs.junit }}
+        METRICS: ${{ inputs.metrics }}
+        RUN_ID: ${{ inputs.run-id }}
+        LABEL: ${{ inputs.label }}
+        KEEP: ${{ inputs.keep }}
+        HISTORY: ${{ inputs.history }}
+        HLIMIT: ${{ inputs.allure-history-limit }}
+        BASE_URL: ${{ inputs.base-url }}
+      run: |
+        set -euo pipefail
+        hub="$GITHUB_ACTION_PATH/scripts/hub.mjs"
+        args=(publish --site "$WORK/pages" --project "$PROJECT" --report "$REPORT" --keep "$KEEP" --history "$HISTORY" --result "$WORK/result.json")
+        [ -n "$SOURCE" ]        && args+=(--source "$SOURCE")
+        [ -n "$HISTORY_FILE" ]  && args+=(--history-file "$HISTORY_FILE" --history-limit "$HLIMIT")
+        [ -n "$TITLE" ]         && args+=(--title "$TITLE")
+        [ -n "$PROJECT_TITLE" ] && args+=(--project-title "$PROJECT_TITLE")
+        [ -n "$TYPE" ]          && args+=(--type "$TYPE")
+        [ -n "$ENTRY" ]         && args+=(--entry "$ENTRY")
+        [ -n "$STATS_FILE" ]    && args+=(--stats-file "$STATS_FILE")
+        [ -n "$RUN_ID" ]        && args+=(--run-id "$RUN_ID")
+        [ -n "$LABEL" ]         && args+=(--label "$LABEL")
+        [ -n "$BASE_URL" ]      && args+=(--base-url "$BASE_URL")
+        while IFS= read -r line; do line="$(echo "$line" | xargs)"; [ -n "$line" ] && args+=(--junit "$line"); done <<< "$JUNIT"
+        while IFS= read -r line; do line="$(echo "$line" | xargs)"; [ -n "$line" ] && args+=(--metric "$line"); done <<< "$METRICS"
+
+        publish() {
+          node "$hub" "${args[@]}"
+          # First publish into an empty branch: bring the site shell along so the hub renders.
+          if [ ! -f "$WORK/pages/index.html" ]; then
+            node "$hub" sync-shell --site "$WORK/pages" --from "$GITHUB_ACTION_PATH/site"
+          fi
+        }
+
+        source "$GITHUB_ACTION_PATH/scripts/pages-lib.sh"
+        pages_commit_retry "$WORK/pages" "Publish ${PROJECT}/${REPORT} from ${GITHUB_REPOSITORY}#${GITHUB_RUN_NUMBER}" publish
+        node "$hub" gh-summary --result "$WORK/result.json"
+
+    - name: Fail on test failures
+      if: inputs.fail-on-test-failure == 'true' && (steps.publish.outputs.status == 'failed' || steps.publish.outputs.status == 'broken')
+      shell: bash
+      env:
+        CHANNEL: ${{ inputs.project }}/${{ inputs.report }}
+        FAILED: ${{ steps.publish.outputs.failed }}
+        BROKEN: ${{ steps.publish.outputs.broken }}
+        URL: ${{ steps.publish.outputs.url }}
+      run: |
+        echo "::error::${CHANNEL}: ${FAILED:-0} failed, ${BROKEN:-0} broken — ${URL}"
+        exit 1

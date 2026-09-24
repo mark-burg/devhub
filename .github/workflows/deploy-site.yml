@@ -1,0 +1,32 @@
+# Copies the site shell (site/ → gh-pages) whenever it changes. Published reports on
+# gh-pages are left untouched. GitHub Pages must be set to "Deploy from a branch: gh-pages / (root)".
+name: Deploy hub site
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "scripts/hub.mjs", ".github/workflows/deploy-site.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devhub-deploy-site
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync site shell into gh-pages
+        env:
+          HUB_REPO: ${{ github.repository }}
+          HUB_TOKEN: ${{ github.token }}
+        run: |
+          source scripts/pages-lib.sh
+          pages_clone "$RUNNER_TEMP/pages"
+          pages_commit_retry "$RUNNER_TEMP/pages" "Deploy site shell @ ${GITHUB_SHA::7}" \
+            node scripts/hub.mjs sync-shell --site "$RUNNER_TEMP/pages" --from site

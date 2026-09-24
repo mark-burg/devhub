@@ -1,0 +1,71 @@
+# Example: a test repository publishing Allure 3 results into the hub.
+# Copy to .github/workflows/ in the repository that runs the tests.
+#
+# If the hub is a different repository, create a fine-grained token with
+# "Contents: read and write" on the hub repo and save it as the DEVHUB_TOKEN secret.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # playwright.config.ts: reporter: [["list"], ["allure-playwright"]]
+      - name: Run tests
+        run: npx playwright test
+
+      - name: Publish to Dev Hub
+        id: hub
+        if: ${{ !cancelled() }}
+        uses: OWNER/devhub@main
+        with:
+          hub-repo: OWNER/devhub
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: web-app
+          project-title: Web App
+          report: e2e
+          title: E2E tests
+          allure-results: allure-results
+          # allure-config: allurerc.mjs       # optional: categories, quality gate, dashboard plugin…
+
+      - name: Comment on the pull request
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.hub.outputs.url != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: |
+            **E2E** — ${{ steps.hub.outputs.passed }} passed, ${{ steps.hub.outputs.failed }} failed, ${{ steps.hub.outputs.broken }} broken
+            [Open the report](${{ steps.hub.outputs.url }})
+        run: gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt pytest allure-pytest
+      - run: pytest --alluredir=allure-results
+
+      - uses: OWNER/devhub@main
+        if: ${{ !cancelled() }}
+        with:
+          hub-repo: OWNER/devhub
+          token: ${{ secrets.DEVHUB_TOKEN }}
+          project: payments-api
+          report: integration
+          allure-results: allure-results
+          fail-on-test-failure: true # publish first, then fail the job

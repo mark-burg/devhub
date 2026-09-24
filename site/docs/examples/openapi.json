@@ -1,0 +1,100 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Shop API",
+    "version": "2.4.0",
+    "description": "Example spec rendered by the hub's `openapi` page type. Point `src` at your own spec (JSON or YAML, local path or URL) and pick a renderer: `swagger`, `redoc` or `scalar`."
+  },
+  "servers": [{ "url": "https://api.example.com/v2" }],
+  "tags": [
+    { "name": "Products", "description": "Catalog browsing" },
+    { "name": "Cart", "description": "The current user's cart" },
+    { "name": "Orders", "description": "Placing and tracking orders" }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Search products",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Full-text query" },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["relevance", "price_asc", "price_desc"] } }
+        ],
+        "responses": {
+          "200": { "description": "A page of products", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductPage" } } } }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get a product",
+        "parameters": [{ "$ref": "#/components/parameters/Id" }],
+        "responses": {
+          "200": { "description": "The product", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Product" } } } },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/cart/items": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Add an item to the cart",
+        "security": [{ "bearer": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CartItemInput" } } } },
+        "responses": {
+          "201": { "description": "Updated cart", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "422": { "description": "Out of stock or invalid quantity" }
+        }
+      }
+    },
+    "/cart/coupon": {
+      "put": {
+        "tags": ["Cart"],
+        "summary": "Apply a coupon",
+        "security": [{ "bearer": [] }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["code"], "properties": { "code": { "type": "string", "example": "WELCOME10" } } } } } },
+        "responses": {
+          "200": { "description": "Coupon applied", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Cart" } } } },
+          "409": { "description": "Coupon expired or not applicable" }
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Place an order from the cart",
+        "security": [{ "bearer": [] }],
+        "responses": {
+          "201": { "description": "Order created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "402": { "description": "Payment requires 3-D Secure challenge" }
+        }
+      },
+      "get": {
+        "tags": ["Orders"],
+        "summary": "List my orders",
+        "security": [{ "bearer": [] }],
+        "parameters": [{ "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/OrderStatus" } }],
+        "responses": {
+          "200": { "description": "Orders", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } } }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" } },
+    "parameters": { "Id": { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } },
+    "responses": { "NotFound": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } } },
+    "schemas": {
+      "Money": { "type": "object", "required": ["amount", "currency"], "properties": { "amount": { "type": "integer", "description": "Minor units", "example": 4200 }, "currency": { "type": "string", "example": "USD" } } },
+      "Product": { "type": "object", "required": ["id", "name", "price"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "price": { "$ref": "#/components/schemas/Money" }, "stock": { "type": "integer" }, "tags": { "type": "array", "items": { "type": "string" } } } },
+      "ProductPage": { "type": "object", "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } }, "page": { "type": "integer" }, "total": { "type": "integer" } } },
+      "CartItemInput": { "type": "object", "required": ["productId", "quantity"], "properties": { "productId": { "type": "string" }, "quantity": { "type": "integer", "minimum": 1 } } },
+      "Cart": { "type": "object", "properties": { "items": { "type": "array", "items": { "type": "object", "properties": { "product": { "$ref": "#/components/schemas/Product" }, "quantity": { "type": "integer" } } } }, "subtotal": { "$ref": "#/components/schemas/Money" }, "coupon": { "type": "string", "nullable": true } } },
+      "OrderStatus": { "type": "string", "enum": ["pending", "paid", "shipped", "delivered", "cancelled"] },
+      "Order": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "$ref": "#/components/schemas/OrderStatus" }, "total": { "$ref": "#/components/schemas/Money" }, "createdAt": { "type": "string", "format": "date-time" } } },
+      "Error": { "type": "object", "properties": { "code": { "type": "string" }, "message": { "type": "string" } } }
+    }
+  }
+}

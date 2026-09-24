@@ -1,0 +1,82 @@
+# Publishes generated demo runs so you can see the hub working end to end before wiring
+# up real projects. Run it a few times from the Actions tab to build up trends.
+name: Demo reports
+
+on:
+  workflow_dispatch:
+    inputs:
+      fail-rate:
+        description: "Fraction of tests that fail (0–1)"
+        default: "0.05"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devhub-demo
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Stand-in for your real test command, e.g. `npx playwright test` with allure-playwright.
+      - name: Generate sample Allure results
+        env:
+          FAIL_RATE: ${{ inputs.fail-rate }}
+        run: node scripts/sample-results.mjs --out allure-results --suite web --seed "$GITHUB_RUN_ID" --fail-rate "$FAIL_RATE"
+
+      - name: Publish Allure report
+        uses: ./
+        with:
+          project: shop-web
+          project-title: Shop Web
+          report: e2e
+          title: E2E tests
+          allure-results: allure-results
+          keep: 15
+
+  api:
+    runs-on: ubuntu-latest
+    needs: e2e # serialize demo pushes; real projects can publish in parallel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generate sample Allure results
+        run: node scripts/sample-results.mjs --out allure-results --suite api --seed "$GITHUB_RUN_ID" --fail-rate 0.02
+      - name: Publish Allure report
+        uses: ./
+        with:
+          project: shop-api
+          project-title: Shop API
+          report: integration
+          title: Integration tests
+          allure-results: allure-results
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: api
+    steps:
+      - uses: actions/checkout@v4
+      # Stand-in for e.g. `npx vitest run --coverage --coverage.reporter=html --coverage.reporter=json-summary`
+      - name: Fake a coverage report
+        run: |
+          mkdir -p coverage
+          pct=$(( 70 + GITHUB_RUN_NUMBER % 20 ))
+          echo "{\"total\":{\"lines\":{\"pct\":$pct},\"statements\":{\"pct\":$((pct-1))},\"functions\":{\"pct\":$((pct-6))},\"branches\":{\"pct\":$((pct-12))}}}" > coverage/coverage-summary.json
+          echo "<!doctype html><title>Coverage</title><h1 style='font-family:system-ui'>Coverage: ${pct}% lines</h1>" > coverage/index.html
+      - name: Publish coverage
+        uses: ./
+        with:
+          project: shop-web
+          report: coverage
+          title: Unit coverage
+          type: coverage
+          report-dir: coverage

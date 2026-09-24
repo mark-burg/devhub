@@ -1,0 +1,18 @@
+{
+  "name": "devhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A static GitHub Pages hub for Allure reports, coverage, benchmarks, API docs and other developer tooling.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "demo": "node scripts/demo.mjs",
+    "demo:offline": "node scripts/demo.mjs --no-allure",
+    "serve": "node scripts/serve.mjs site",
+    "dev": "node scripts/demo.mjs && node scripts/serve.mjs site",
+    "hub": "node scripts/hub.mjs",
+    "list": "node scripts/hub.mjs list --site site"
+  }
+}

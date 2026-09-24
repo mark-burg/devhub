@@ -1,0 +1,37 @@
+# Pruned reports are deleted from the working tree but remain in git history, so the
+# gh-pages branch keeps growing. This squashes it to a single commit once a month.
+# --force-with-lease makes it a no-op if a publish landed while it was running.
+name: Compact gh-pages
+
+on:
+  schedule:
+    - cron: "17 3 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devhub-compact
+  cancel-in-progress: false
+
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Squash gh-pages history
+        env:
+          REPO: ${{ github.repository }}
+          TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git clone --quiet --depth 1 --branch gh-pages "https://x-access-token:${TOKEN}@github.com/${REPO}.git" pages
+          cd pages
+          head="$(git rev-parse HEAD)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --quiet --orphan compacted
+          git add -A
+          git commit --quiet -m "Compact gh-pages ($(date -u +%Y-%m-%d))"
+          git push --force-with-lease="gh-pages:${head}" origin compacted:gh-pages
+          echo "Squashed gh-pages to a single commit."
