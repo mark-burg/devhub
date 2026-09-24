@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main, gh-pages] # main is covered by deploy-site.yml
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx vite build
+      - name: Publisher smoke test
+        run: |
+          node scripts/sample-results.mjs --out /tmp/results --seed 1 >/dev/null
+          mkdir -p /tmp/report && echo '<h1>ok</h1>' > /tmp/report/index.html
+          node scripts/hub.mjs publish --site /tmp/pages --project ci --report smoke --source /tmp/report --metric coverage=80
+          node scripts/hub.mjs sync-shell --site /tmp/pages --from dist
+          test -f /tmp/pages/index.html && test -f /tmp/pages/data/manifest.json

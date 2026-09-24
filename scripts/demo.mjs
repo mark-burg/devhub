@@ -18,7 +18,7 @@ import { parseArgs } from "node:util";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const { values: args } = parseArgs({
   options: {
-    site: { type: "string", default: join(HERE, "..", "site") },
+    site: { type: "string", default: join(HERE, "..", ".devhub-preview") },
     runs: { type: "string", default: "12" },
     "no-allure": { type: "boolean", default: false },
     clean: { type: "boolean", default: true },
@@ -143,7 +143,7 @@ await Promise.all([
 ]);
 
 rmSync(work, { recursive: true, force: true });
-console.log(`\nDemo data written to ${site}. Start the preview with: npm run serve`);
+console.log(`\nDemo data written to ${site}. Start the app with: npm run dev  (or npm run preview for the production build)`);
 
 // ───────────── fake pages ─────────────
 

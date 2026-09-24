@@ -1,11 +1,19 @@
-# Copies the site shell (site/ → gh-pages) whenever it changes. Published reports on
-# gh-pages are left untouched. GitHub Pages must be set to "Deploy from a branch: gh-pages / (root)".
+# Builds the site shell (site/ → dist/) and copies it into gh-pages whenever it changes.
+# Published reports on gh-pages are left untouched. GitHub Pages must be set to
+# "Deploy from a branch: gh-pages / (root)".
 name: Deploy hub site
 
 on:
   push:
     branches: [main]
-    paths: ["site/**", "scripts/hub.mjs", ".github/workflows/deploy-site.yml"]
+    paths:
+      - "site/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.ts"
+      - "tsconfig.json"
+      - "scripts/hub.mjs"
+      - ".github/workflows/deploy-site.yml"
   workflow_dispatch:
 
 permissions:
@@ -20,8 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-      - name: Sync site shell into gh-pages
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - name: Sync built site into gh-pages
         env:
           HUB_REPO: ${{ github.repository }}
           HUB_TOKEN: ${{ github.token }}
@@ -29,4 +45,4 @@ jobs:
           source scripts/pages-lib.sh
           pages_clone "$RUNNER_TEMP/pages"
           pages_commit_retry "$RUNNER_TEMP/pages" "Deploy site shell @ ${GITHUB_SHA::7}" \
-            node scripts/hub.mjs sync-shell --site "$RUNNER_TEMP/pages" --from site
+            node scripts/hub.mjs sync-shell --site "$RUNNER_TEMP/pages" --from dist

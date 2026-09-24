@@ -270,17 +270,13 @@ runs:
         while IFS= read -r line; do line="$(echo "$line" | xargs)"; [ -n "$line" ] && args+=(--junit "$line"); done <<< "$JUNIT"
         while IFS= read -r line; do line="$(echo "$line" | xargs)"; [ -n "$line" ] && args+=(--metric "$line"); done <<< "$METRICS"
 
-        publish() {
-          node "$hub" "${args[@]}"
-          # First publish into an empty branch: bring the site shell along so the hub renders.
-          if [ ! -f "$WORK/pages/index.html" ]; then
-            node "$hub" sync-shell --site "$WORK/pages" --from "$GITHUB_ACTION_PATH/site"
-          fi
-        }
-
         source "$GITHUB_ACTION_PATH/scripts/pages-lib.sh"
-        pages_commit_retry "$WORK/pages" "Publish ${PROJECT}/${REPORT} from ${GITHUB_REPOSITORY}#${GITHUB_RUN_NUMBER}" publish
+        pages_commit_retry "$WORK/pages" "Publish ${PROJECT}/${REPORT} from ${GITHUB_REPOSITORY}#${GITHUB_RUN_NUMBER}" node "$hub" "${args[@]}"
         node "$hub" gh-summary --result "$WORK/result.json"
+        # The site shell is built and deployed by the hub's own "Deploy hub site" workflow.
+        if [ ! -f "$WORK/pages/index.html" ]; then
+          echo "::warning::Published, but ${HUB_REPO}@${HUB_BRANCH} has no site yet. Run the \"Deploy hub site\" workflow in ${HUB_REPO} once to build and deploy it."
+        fi
 
     - name: Fail on test failures
       if: inputs.fail-on-test-failure == 'true' && (steps.publish.outputs.status == 'failed' || steps.publish.outputs.status == 'broken')

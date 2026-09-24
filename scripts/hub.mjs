@@ -5,7 +5,7 @@
 //   node scripts/hub.mjs publish      --site <pages dir> --project <id> --report <id> --source <dir|file> [options]
 //   node scripts/hub.mjs history-path --site <pages dir> --project <id> --report <id>
 //   node scripts/hub.mjs remove       --site <pages dir> --project <id> [--report <id>] [--run <id>]
-//   node scripts/hub.mjs sync-shell   --site <pages dir> [--from site]
+//   node scripts/hub.mjs sync-shell   --site <pages dir> [--from dist]
 //   node scripts/hub.mjs rebuild      --site <pages dir>
 //   node scripts/hub.mjs list         --site <pages dir>
 //   node scripts/hub.mjs gh-summary   --result <file>
@@ -262,8 +262,8 @@ async function remove() {
 // touching published reports. Files the shell shipped last time but no longer contains are removed.
 async function syncShell() {
   const site = resolve(required(opt.site, "--site"));
-  const from = resolve(opt.from ?? join(HERE, "..", "site"));
-  if (!existsSync(join(from, "index.html"))) throw new Error(`${from} does not look like the site shell (no index.html)`);
+  const from = resolve(opt.from ?? join(HERE, "..", "dist"));
+  if (!existsSync(join(from, "index.html"))) throw new Error(`${from} does not look like the built site shell (no index.html) — run \`npm run build\` first`);
   mkdirSync(site, { recursive: true });
 
   const files = walk(from).filter((rel) => !isGenerated(rel));
