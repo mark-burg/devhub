@@ -154,7 +154,7 @@ export function RunChart(props: RunChartProps) {
             viewBox={`0 0 ${W} ${H}`}
             class="chart-svg"
             role="img"
-            tabIndex={0}
+            tabindex={0} // lowercase: SVG attribute names are case-sensitive (camelCase is ignored by WebKit/Firefox)
             aria-label={props.ariaLabel ?? ""}
             onFocus={() => setActive((a) => (a >= 0 ? a : n - 1))}
             onBlur={() => setActive(-1)}

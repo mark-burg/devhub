@@ -137,17 +137,23 @@ export function CommandPalette({ hub }: { hub: Hub }) {
             placeholder="Jump to a project, report, run, commit or page…"
             autocomplete="off"
             spellcheck={false}
+            role="combobox"
+            aria-label="Search projects, reports, runs and pages"
+            aria-expanded={open}
+            aria-autocomplete="list"
             aria-controls="palette-list"
+            aria-activedescendant={results.length ? `palette-opt-${selected}` : undefined}
             value={query}
             onInput={(e) => { setQuery(e.currentTarget.value); setSelected(0); }}
             onKeyDown={onKeyDown}
           />
           <kbd>esc</kbd>
         </div>
-        <ul class="palette-list" id="palette-list" role="listbox" ref={list}>
+        <ul class="palette-list" id="palette-list" role="listbox" aria-label="Results" tabIndex={-1} ref={list}>
           {results.length ? results.map((it, i) => (
             <li
               key={it.href + it.label}
+              id={`palette-opt-${i}`}
               class={`palette-item${i === selected ? " selected" : ""}`}
               role="option"
               aria-selected={i === selected}

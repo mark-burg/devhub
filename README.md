@@ -57,7 +57,8 @@ Copy-paste workflows are in [examples/](examples).
 |---|---|
 | `npm run dev` | Vite dev server; `/reports` and `/data` come from `.devhub-preview/` |
 | `npm run demo` | Seed `.devhub-preview/` with demo runs (`demo:offline` skips Allure) |
-| `npm test` | Vitest (jsdom): selectors, router, charts, parsers, components |
+| `npm test` | Vitest: selectors, router, charts, parsers, components, and the publisher CLI against real tool output (`test/fixtures/`) |
+| `npm run test:e2e` | Build, seed demo data, then Playwright in Chromium, WebKit and Firefox under `/devhub/` (includes an axe accessibility scan) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck, then build `site/` into `dist/` |
 | `npm run preview` | Build and serve `dist/` layered over `.devhub-preview/`, like gh-pages |

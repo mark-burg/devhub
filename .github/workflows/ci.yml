@@ -4,9 +4,29 @@ on:
   pull_request:
   push:
     branches-ignore: [main, gh-pages] # main is covered by deploy-site.yml
+  workflow_dispatch:
 
 jobs:
-  check:
+  unit:
+    name: Unit tests + build (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx vite build
+
+  e2e:
+    name: Browser tests (Chromium, WebKit, Firefox)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,13 +35,153 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npx vite build
-      - name: Publisher smoke test
+      - run: npx playwright install --with-deps chromium webkit firefox
+      - run: npm run build
+      - name: Seed demo content (real Allure 3 reports)
+        run: node e2e/seed.mjs
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 14
+
+  action:
+    name: Action integration (every input type)
+    runs-on: ubuntu-latest
+    env:
+      # Publish into a throwaway local repository instead of this repo's gh-pages.
+      HUB_REMOTE_URL: /tmp/hub.git
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare an empty hub remote and test inputs
         run: |
-          node scripts/sample-results.mjs --out /tmp/results --seed 1 >/dev/null
-          mkdir -p /tmp/report && echo '<h1>ok</h1>' > /tmp/report/index.html
-          node scripts/hub.mjs publish --site /tmp/pages --project ci --report smoke --source /tmp/report --metric coverage=80
-          node scripts/hub.mjs sync-shell --site /tmp/pages --from dist
-          test -f /tmp/pages/index.html && test -f /tmp/pages/data/manifest.json
+          git init --quiet --bare -b gh-pages /tmp/hub.git
+          node scripts/sample-results.mjs --out allure-results --suite web --seed 7 --fail-rate 0.3
+          cat > allurerc.mjs <<'EOF'
+          export default {
+            name: "CI multi-plugin",
+            plugins: { awesome: { options: {} }, dashboard: { options: {} } },
+          };
+          EOF
+
+      - name: Allure results + custom config (first publish into an empty branch)
+        id: allure
+        uses: ./
+        with:
+          project: ci
+          report: allure
+          allure-results: allure-results
+          allure-config: allurerc.mjs
+
+      - name: Same channel again (history is restored)
+        id: allure2
+        uses: ./
+        with:
+          project: ci
+          report: allure
+          allure-results: allure-results
+          allure-config: allurerc.mjs
+
+      - name: fail-on-test-failure publishes, then fails
+        id: gate
+        continue-on-error: true
+        uses: ./
+        with:
+          project: ci
+          report: gated
+          allure-results: allure-results
+          fail-on-test-failure: true
+
+      - name: Report folder + JUnit stats
+        id: junit
+        uses: ./
+        with:
+          project: ci
+          report: junit
+          report-dir: test/fixtures/junit
+          junit: test/fixtures/junit/pytest.xml
+
+      - name: Playwright report + JSON stats
+        id: pw
+        uses: ./
+        with:
+          project: ci
+          report: playwright
+          type: playwright
+          report-dir: test/fixtures/playwright
+          stats-file: test/fixtures/playwright/results.json
+
+      - name: Coverage report
+        id: cov
+        uses: ./
+        with:
+          project: ci
+          report: coverage
+          report-dir: test/fixtures/jacoco
+          title: JaCoCo coverage
+
+      - name: Metrics only
+        id: metrics
+        uses: ./
+        with:
+          project: ci
+          report: bundle
+          metrics: |
+            bundle.size=412
+            lcp_ms=1830
+
+      - name: Nothing to publish is an error
+        id: empty
+        continue-on-error: true
+        uses: ./
+        with:
+          project: ci
+
+      - name: Check outputs and the published branch
+        env:
+          ALLURE_TOTAL: ${{ steps.allure.outputs.total }}
+          ALLURE_URL: ${{ steps.allure.outputs.url }}
+          ALLURE_STATUS: ${{ steps.allure.outputs.status }}
+          GATE: ${{ steps.gate.outcome }}
+          GATE_RUN: ${{ steps.gate.outputs.run-id }}
+          JUNIT: ${{ steps.junit.outputs.total }}/${{ steps.junit.outputs.failed }}/${{ steps.junit.outputs.skipped }}
+          PW: ${{ steps.pw.outputs.status }}/${{ steps.pw.outputs.passed }}
+          COV_STATUS: ${{ steps.cov.outputs.status }}
+          EMPTY: ${{ steps.empty.outcome }}
+          BADGE: ${{ steps.junit.outputs.badge-url }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$*"; exit 1; }
+          [ "$ALLURE_TOTAL" -gt 0 ] || fail "allure total output missing"
+          [ "$ALLURE_STATUS" = failed ] || fail "allure status should be failed, got $ALLURE_STATUS"
+          [[ "$ALLURE_URL" == "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/#/r/ci/allure/"* ]] || fail "unexpected url $ALLURE_URL"
+          [ "$GATE" = failure ] || fail "fail-on-test-failure should fail the step, got $GATE"
+          [ -n "$GATE_RUN" ] || fail "gated run should still be published"
+          [ "$JUNIT" = "8/1/1" ] || fail "junit outputs $JUNIT"
+          [ "$PW" = "passed/8" ] || fail "playwright outputs $PW"
+          [ -z "$COV_STATUS" ] || fail "coverage report should have no test status"
+          [ "$EMPTY" = failure ] || fail "empty publish should fail"
+          [[ "$BADGE" == https://img.shields.io/endpoint?url=* ]] || fail "badge url $BADGE"
+
+          git clone --quiet --branch gh-pages /tmp/hub.git /tmp/hub
+          node - <<'EOF'
+          const fs = require("fs");
+          const m = JSON.parse(fs.readFileSync("/tmp/hub/data/manifest.json", "utf8"));
+          const r = (p, id) => m.projects.find((x) => x.id === p).reports.find((x) => x.id === id);
+          const assert = (c, msg) => { if (!c) { console.log(`::error::${msg}`); process.exit(1); } };
+          assert(r("ci", "allure").runs.length === 2, "two allure runs");
+          assert(r("ci", "allure").runs[0].entry === "awesome/", "multi-plugin report opens awesome/");
+          assert(r("ci", "coverage").type === "coverage" && r("ci", "coverage").runs[0].metrics.coverage === 88.89, "jacoco coverage");
+          assert(r("ci", "bundle").runs[0].metrics["bundle.size"] === 412 && r("ci", "bundle").runs[0].metrics.lcp_ms === 1830, "metrics");
+          assert(r("ci", "junit").runs[0].git.commit === process.env.GITHUB_SHA, "git metadata");
+          const history = fs.readFileSync("/tmp/hub/reports/ci/allure/history.jsonl", "utf8").trim().split("\n");
+          assert(history.length === 2, `history has ${history.length} entries, expected 2`);
+          assert(fs.existsSync("/tmp/hub/reports/ci/allure/latest/index.html"), "latest redirect");
+          assert(!fs.existsSync("/tmp/hub/index.html"), "the action must not deploy the site shell");
+          console.log("All published content checks passed.");
+          EOF

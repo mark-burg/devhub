@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="1" tests="8" time="0.018" timestamp="2026-09-25T01:51:46.858813-04:00" hostname="build-host"><testcase classname="tests.test_calc" name="test_add" time="0.000" /><testcase classname="tests.test_calc" name="test_divide" time="0.000" /><testcase classname="tests.test_calc" name="test_divide_by_zero" time="0.000" /><testcase classname="tests.test_calc" name="test_grade[95-A]" time="0.000" /><testcase classname="tests.test_calc" name="test_grade[85-B]" time="0.000" /><testcase classname="tests.test_calc" name="test_grade[50-F]" time="0.000" /><testcase classname="tests.test_calc" name="test_known_bug" time="0.000"><failure message="AssertionError: assert 'C' == 'B'&#10;  &#10;  - B&#10;  + C">def test_known_bug():
+&gt;       assert grade(75) == "B"  # deliberately failing
+        ^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 'C' == 'B'
+E         
+E         - B
+E         + C
+
+tests/test_calc.py:19: AssertionError</failure></testcase><testcase classname="tests.test_calc" name="test_skipped" time="0.000"><skipped type="pytest.skip" message="not implemented">/work/sample/py/tests/test_calc.py:21: not implemented</skipped></testcase></testsuite></testsuites>

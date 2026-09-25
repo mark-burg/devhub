@@ -1,0 +1,3 @@
+{"total": {"lines":{"total":16,"covered":10,"skipped":0,"pct":62.5},"statements":{"total":16,"covered":10,"skipped":0,"pct":62.5},"functions":{"total":3,"covered":2,"skipped":0,"pct":66.66},"branches":{"total":5,"covered":3,"skipped":0,"pct":60},"branchesTrue":{"total":0,"covered":0,"skipped":0,"pct":"Unknown"}}
+,"/work/sample/js/lib.js": {"lines":{"total":16,"covered":10,"skipped":0,"pct":62.5},"functions":{"total":3,"covered":2,"skipped":0,"pct":66.66},"statements":{"total":16,"covered":10,"skipped":0,"pct":62.5},"branches":{"total":5,"covered":3,"skipped":0,"pct":60}}
+}

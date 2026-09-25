@@ -473,6 +473,8 @@ function detectType(source) {
   if (has("coverage-summary.json") || has("lcov-report") || has("lcov.info") || has("coverage_html.js") || has("jacoco-sessions.html") || has("cobertura-coverage.xml")) return "coverage";
   if (has("index.html") && /playwright/i.test(safeRead(join(source, "index.html"), 4000))) return "playwright";
   if (findFiles(source, (f) => /\.report\.json$|^lhr.*\.json$/i.test(f), 1).length) return "lighthouse";
+  // Anything else with coverage numbers (coverage.py's hashed assets, Cobertura/JaCoCo XML, lcov…)
+  if (Object.keys(detectMetrics(source)).some((k) => k.startsWith("coverage"))) return "coverage";
   return null;
 }
 

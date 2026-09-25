@@ -110,9 +110,11 @@ export function postProcess(root: HTMLElement, page: NavItem, hub: Hub): void {
   for (const table of root.querySelectorAll("table")) {
     const wrap = document.createElement("div");
     wrap.className = "table-wrap";
+    wrap.tabIndex = 0; // scrollable regions must be reachable by keyboard
     table.replaceWith(wrap);
     wrap.append(table);
   }
+  for (const pre of root.querySelectorAll("pre")) pre.tabIndex = 0;
   for (const code of root.querySelectorAll("pre > code.language-mermaid")) {
     const div = document.createElement("div");
     div.className = "mermaid";

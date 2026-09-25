@@ -25,7 +25,7 @@ export function RunsTable({ rows, showReport = false, metricCols = [], limit = I
 
   return (
     <div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabIndex={0} role="region" aria-label="Runs">
         <table class="table">
           <thead>
             <tr>
