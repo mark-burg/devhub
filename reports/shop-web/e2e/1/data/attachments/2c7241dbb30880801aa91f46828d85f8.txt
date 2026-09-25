@@ -1,0 +1,2 @@
+[2026-09-25T05:02:13.651Z] starting Reject expired coupon
+[2026-09-25T05:02:17.058Z] finished with status=broken

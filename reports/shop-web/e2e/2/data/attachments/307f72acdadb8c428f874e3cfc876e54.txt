@@ -1,0 +1,2 @@
+[2026-09-25T05:44:57.620Z] starting Cart persists across reloads
+[2026-09-25T05:44:59.826Z] finished with status=passed

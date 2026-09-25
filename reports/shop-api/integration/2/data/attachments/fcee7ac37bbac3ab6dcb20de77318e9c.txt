@@ -1,0 +1,2 @@
+[2026-09-25T05:44:14.669Z] starting DELETE /users/:id requires admin
+[2026-09-25T05:44:15.354Z] finished with status=passed

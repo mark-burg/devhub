@@ -1,0 +1,35 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Test-suite duration per run, one line per report. Reads the hub's flat data/runs.json, which scripts/hub.mjs regenerates on every publish.",
+  "width": "container",
+  "height": 320,
+  "data": { "url": "../../data/runs.json" },
+  "transform": [
+    { "filter": "datum.durationMs != null" },
+    { "calculate": "datum.projectTitle + ' / ' + datum.reportTitle", "as": "report" },
+    { "calculate": "datum.durationMs / 60000", "as": "minutes" }
+  ],
+  "mark": { "type": "line", "strokeWidth": 2, "point": { "filled": true, "size": 50 } },
+  "encoding": {
+    "x": { "field": "createdAt", "type": "temporal", "title": null },
+    "y": { "field": "minutes", "type": "quantitative", "title": "Duration (minutes)", "scale": { "zero": true } },
+    "color": {
+      "field": "report", "type": "nominal", "title": null,
+      "scale": { "range": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"] },
+      "legend": { "orient": "top", "symbolType": "stroke" }
+    },
+    "tooltip": [
+      { "field": "report", "title": "Report" },
+      { "field": "label", "title": "Run" },
+      { "field": "createdAt", "type": "temporal", "title": "When", "format": "%b %d, %H:%M" },
+      { "field": "minutes", "type": "quantitative", "format": ".1f", "title": "Minutes" },
+      { "field": "branch", "title": "Branch" }
+    ]
+  },
+  "config": {
+    "view": { "stroke": null },
+    "axis": { "domain": false, "ticks": false, "gridColor": "rgba(137,135,129,0.25)", "labelColor": "#898781", "titleColor": "#898781", "labelFontSize": 11 },
+    "axisX": { "grid": false, "tickCount": 7, "labelFlush": true },
+    "legend": { "labelColor": "#898781" }
+  }
+}

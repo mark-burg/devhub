@@ -1,0 +1,2 @@
+[2026-09-25T05:44:05.620Z] starting GET /users returns paginated list
+[2026-09-25T05:44:08.287Z] finished with status=passed

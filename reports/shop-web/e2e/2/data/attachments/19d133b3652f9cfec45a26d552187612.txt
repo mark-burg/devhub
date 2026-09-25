@@ -1,0 +1,2 @@
+[2026-09-25T05:44:46.141Z] starting Search returns relevant products
+[2026-09-25T05:44:47.240Z] finished with status=failed

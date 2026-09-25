@@ -1,0 +1,2 @@
+[2026-09-25T05:44:49.730Z] starting Sort by price ascending
+[2026-09-25T05:44:50.594Z] finished with status=passed

@@ -1,0 +1,2 @@
+[2026-09-25T05:44:21.035Z] starting Concurrent updates are serialized
+[2026-09-25T05:44:21.387Z] finished with status=passed

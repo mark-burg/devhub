@@ -1,0 +1,2 @@
+[2026-09-25T05:44:08.289Z] starting GET /users/:id returns 404 for unknown id
+[2026-09-25T05:44:11.039Z] finished with status=passed

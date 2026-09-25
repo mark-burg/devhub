@@ -1,0 +1,2 @@
+[2026-09-25T05:45:27.035Z] starting Address validation rejects bad ZIP
+[2026-09-25T05:45:32.088Z] finished with status=passed

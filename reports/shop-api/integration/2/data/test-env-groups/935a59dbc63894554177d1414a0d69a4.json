@@ -1,0 +1,1 @@
+{"id":"935a59dbc63894554177d1414a0d69a4","fullName":"API.Users endpoint.PATCH /users/:id is idempotent","name":"PATCH /users/:id is idempotent","status":"passed","testResultsByEnv":{"default":"0afaf3c396ab23e40bf930c97c5758ad"}}

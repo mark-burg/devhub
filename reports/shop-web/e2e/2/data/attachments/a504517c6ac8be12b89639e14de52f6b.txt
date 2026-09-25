@@ -1,0 +1,2 @@
+[2026-09-25T05:46:09.283Z] starting Delete account requires confirmation
+[2026-09-25T05:46:12.280Z] finished with status=passed

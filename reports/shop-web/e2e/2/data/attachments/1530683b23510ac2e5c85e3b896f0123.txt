@@ -1,0 +1,2 @@
+[2026-09-25T05:44:31.384Z] starting Password reset email is sent
+[2026-09-25T05:44:31.929Z] finished with status=passed

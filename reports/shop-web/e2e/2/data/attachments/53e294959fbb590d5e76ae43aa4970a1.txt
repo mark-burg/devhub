@@ -1,0 +1,2 @@
+[2026-09-25T05:45:14.197Z] starting Guest checkout completes
+[2026-09-25T05:45:14.970Z] finished with status=passed

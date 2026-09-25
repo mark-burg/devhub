@@ -1,0 +1,2 @@
+[2026-09-25T05:44:22.966Z] starting Logout clears session
+[2026-09-25T05:44:25.725Z] finished with status=passed

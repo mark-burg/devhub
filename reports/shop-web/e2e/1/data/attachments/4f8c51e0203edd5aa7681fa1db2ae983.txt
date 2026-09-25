@@ -1,0 +1,2 @@
+[2026-09-25T05:02:05.252Z] starting Add item to cart
+[2026-09-25T05:02:06.192Z] finished with status=failed

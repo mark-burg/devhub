@@ -1,0 +1,2 @@
+[2026-09-25T05:45:16.428Z] starting Saved card checkout
+[2026-09-25T05:45:17.545Z] finished with status=passed

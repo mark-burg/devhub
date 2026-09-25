@@ -1,0 +1,2 @@
+[2026-09-25T05:45:00.690Z] starting Apply valid coupon
+[2026-09-25T05:45:03.462Z] finished with status=passed

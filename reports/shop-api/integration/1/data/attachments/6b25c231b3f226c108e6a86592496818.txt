@@ -1,0 +1,2 @@
+[2026-09-25T05:01:45.477Z] starting Order totals include tax
+[2026-09-25T05:01:48.243Z] finished with status=passed

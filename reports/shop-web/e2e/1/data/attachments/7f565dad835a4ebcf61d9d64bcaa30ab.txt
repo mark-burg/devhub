@@ -1,0 +1,2 @@
+[2026-09-25T05:01:48.654Z] starting Session expires after inactivity
+[2026-09-25T05:01:50.838Z] finished with status=passed

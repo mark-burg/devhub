@@ -1,0 +1,2 @@
+[2026-09-25T05:02:03.612Z] starting Backorder flag set at zero stock
+[2026-09-25T05:02:06.973Z] finished with status=passed

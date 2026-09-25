@@ -1,0 +1,2 @@
+[2026-09-25T05:44:54.198Z] starting Remove item from cart
+[2026-09-25T05:44:57.610Z] finished with status=passed

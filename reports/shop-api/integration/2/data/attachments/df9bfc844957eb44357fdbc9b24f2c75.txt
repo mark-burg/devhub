@@ -1,0 +1,2 @@
+[2026-09-25T05:44:35.377Z] starting Bulk import handles 10k rows
+[2026-09-25T05:44:36.129Z] finished with status=failed
