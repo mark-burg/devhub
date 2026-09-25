@@ -32,6 +32,15 @@ const work = mkdtempSync(join(tmpdir(), "devhub-demo-"));
 const HUB = join(HERE, "hub.mjs");
 const SAMPLE = join(HERE, "sample-results.mjs");
 
+// Report generation runs in parallel, but publishes into one folder must be sequential:
+// hub.mjs rewrites data/manifest.json, and concurrent writers would lose runs.
+let publishLock = Promise.resolve();
+const serial = (fn) => {
+  const next = publishLock.then(fn, fn);
+  publishLock = next.catch(() => {});
+  return next;
+};
+
 const run = (cmd, argv, opts = {}) => new Promise((res, rej) => {
   const p = spawn(cmd, argv, { stdio: opts.quiet ? "ignore" : "inherit", ...opts });
   p.on("error", rej);
@@ -94,11 +103,11 @@ async function allureChannel({ project, projectTitle, report, title, suite, fail
       extra = ["--stats-file", join(dir, "stats.json")];
     }
 
-    await run(process.execPath, [HUB, "publish", "--site", site,
+    await serial(() => run(process.execPath, [HUB, "publish", "--site", site,
       "--project", project, "--project-title", projectTitle, "--report", report, "--title", title, "--type", "allure",
       "--source", out, "--run-id", String(t.runNumber), "--label", `#${t.runNumber}`, "--created", t.created.toISOString(),
       "--branch", t.branch, "--commit", sha(i, project), "--message", t.message, "--keep", "10", ...extra],
-      { env: { ...process.env, GITHUB_ACTIONS: "" } });
+      { env: { ...process.env, GITHUB_ACTIONS: "", GITHUB_REPOSITORY: "" } }));
   }
 }
 
@@ -128,11 +137,11 @@ async function coverageChannel() {
       total: { lines: tot(summary.lines, 4210), statements: tot(summary.statements, 4580), functions: tot(summary.functions, 812), branches: tot(summary.branches, 1390) },
     }));
     writeFileSync(join(dir, "index.html"), coveragePage(summary, i));
-    await run(process.execPath, [HUB, "publish", "--site", site, "--project", "shop-web", "--project-title", "Shop Web",
+    await serial(() => run(process.execPath, [HUB, "publish", "--site", site, "--project", "shop-web", "--project-title", "Shop Web",
       "--report", "coverage", "--title", "Unit coverage", "--type", "coverage", "--source", dir,
       "--run-id", String(t.runNumber), "--label", `#${t.runNumber}`, "--created", t.created.toISOString(),
       "--branch", t.branch, "--commit", sha(i, "shop-web"), "--message", t.message, "--metric", `bundle.size=${Math.round(412 + i * 3.5 - (i > 8 ? 30 : 0))}`, "--keep", "10"],
-      { env: { ...process.env, GITHUB_ACTIONS: "" } });
+      { env: { ...process.env, GITHUB_ACTIONS: "", GITHUB_REPOSITORY: "" } }));
   }
 }
 

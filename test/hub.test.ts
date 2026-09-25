@@ -10,12 +10,14 @@ import { join, resolve } from "node:path";
 const ROOT = resolve(__dirname, "..");
 const HUB = join(ROOT, "scripts/hub.mjs");
 const FIX = join(ROOT, "test/fixtures");
+// The action runs hub.mjs with whatever Node the runner has; CI points HUB_NODE at older versions.
+const NODE = process.env.HUB_NODE || process.execPath;
 
 // A clean environment: no GitHub Actions variables leaking in from CI.
 const baseEnv = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("GITHUB_") && k !== "DEVHUB_REPO"));
 
 function hub(args: string[], env: Record<string, string> = {}) {
-  return spawnSync(process.execPath, [HUB, ...args], { encoding: "utf8", env: { ...baseEnv, ...env }, cwd: tmpdir() });
+  return spawnSync(NODE, [HUB, ...args], { encoding: "utf8", env: { ...baseEnv, ...env }, cwd: tmpdir() });
 }
 function ok(args: string[], env: Record<string, string> = {}) {
   const r = hub(args, env);

@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +24,28 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npx vite build
+
+  publisher:
+    # The action runs scripts/hub.mjs with the runner's own Node, so it must keep working on
+    # older versions than the site's toolchain needs.
+    name: Publisher CLI on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: echo "HUB_NODE=$(command -v node)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: '"$HUB_NODE" --version && npx vitest run test/hub.test.ts'
 
   e2e:
     name: Browser tests (Chromium, WebKit, Firefox)
