@@ -53,6 +53,7 @@ export function Benchmark({ page, query }: { page: NavItem; query: URLSearchPara
                   tipTitle={(i) => [series.points[i].label, series.points[i].date ? fmtDate(series.points[i].date) : null].filter(Boolean).join(" · ")}
                   tipFoot={(i) => series.points[i].note ?? ""}
                   onSelect={(i) => { const url = series.points[i].href; if (url) window.open(url, "_blank", "noopener"); }}
+                  isSelectable={(i) => !!series.points[i]?.href}
                   ariaLabel={`${series.name} over time`}
                 />
               </figure>

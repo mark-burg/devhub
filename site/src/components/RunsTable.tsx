@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { useHorizontalOverflow } from "../lib/useHorizontalOverflow";
 import type { MetricInfo, RunRef } from "../types";
 import { commitUrl, passRate, runStatus } from "../selectors";
 import { fmtDate, fmtDuration, fmtPct, fmtRelative, shortSha } from "../lib/format";
@@ -9,6 +10,8 @@ import { Button } from "./ui";
 
 interface Props {
   rows: RunRef[];
+  /** Accessible name for the table (and its scroll region on narrow screens). Must be unique per page. */
+  label: string;
   showReport?: boolean;
   metricCols?: MetricInfo[];
   /** Rows shown before "Show all". */
@@ -18,15 +21,17 @@ interface Props {
 }
 
 /** Runs as a table; every run label links to the viewer. Doubles as the charts' table view. */
-export function RunsTable({ rows, showReport = false, metricCols = [], limit = Infinity, expandable = true }: Props) {
+export function RunsTable({ rows, label, showReport = false, metricCols = [], limit = Infinity, expandable = true }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [wrap, scrolls] = useHorizontalOverflow<HTMLDivElement>();
   const hasStats = rows.some((r) => r.run.stats);
   const visible = expanded ? rows : rows.slice(0, limit);
 
   return (
     <div>
-      <div class="table-wrap" tabIndex={0} role="region" aria-label="Runs">
-        <table class="table">
+      {/* Only a scrolling table is a keyboard stop / named region (WCAG 2.1.1). */}
+      <div class="table-wrap" ref={wrap} tabIndex={scrolls ? 0 : undefined} role={scrolls ? "region" : undefined} aria-label={scrolls ? label : undefined}>
+        <table class="table" aria-label={label}>
           <thead>
             <tr>
               <th>Run</th>

@@ -60,8 +60,17 @@ test.describe("project trends", () => {
     const chart = page.locator("#report-e2e .chart-svg").first();
     const box = (await chart.boundingBox())!;
     // Leftmost column = oldest run (#140), whose report files were pruned.
-    await page.mouse.click(box.x + 60, box.y + box.height / 2);
-    await expect(page).toHaveURL(/#\/p\/shop-web/);
+    const x = box.x + 60, y = box.y + box.height / 2;
+    await page.mouse.move(x, y);
+    const tip = page.locator("#report-e2e .chart-tip");
+    await expect(tip).toContainText("#140");
+    await expect(tip).not.toContainText("Click to open");
+    await page.mouse.click(x, y);
+    // Navigation is a synchronous location.hash assignment inside the click handler.
+    expect(page.url()).toMatch(/#\/p\/shop-web\?n=all$/);
+    // A live column one step to the right does navigate.
+    await page.mouse.move(box.x + box.width - 20, y);
+    await expect(tip).toContainText("Click to open");
   });
 
   test("metric reports get one chart per metric with deltas", async ({ page }) => {

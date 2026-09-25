@@ -27,11 +27,21 @@ for (const theme of ["light", "dark"] as const) {
 
     test("command palette", async ({ page }) => {
       await page.goto("#/");
+      await expect(page.locator(".project-card").first()).toBeVisible();
       await page.keyboard.press("ControlOrMeta+k");
-      await page.keyboard.type("shop");
-      const results = await new AxeBuilder({ page }).include("dialog.palette").withTags(["wcag2a", "wcag2aa"]).analyze();
-      const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-      expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+      const input = page.getByPlaceholder(/Jump to a project/);
+      await expect(input).toBeFocused();
+      const scan = async () => {
+        const results = await new AxeBuilder({ page }).include("dialog.palette").withTags(["wcag2a", "wcag2aa"]).analyze();
+        expect(results.passes.length, "axe must actually have scanned the open palette").toBeGreaterThan(5);
+        return results.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.help}`);
+      };
+      await input.fill("shop");
+      await expect(page.locator(".palette-item").first()).toBeVisible();
+      expect(await scan(), "with results").toEqual([]);
+      await input.fill("zzzz-no-match");
+      await expect(page.getByText("No matches")).toBeVisible();
+      expect(await scan(), "empty state").toEqual([]);
     });
   });
 }

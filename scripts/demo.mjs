@@ -6,7 +6,7 @@
 // Uses the same publish path as CI (scripts/hub.mjs). Allure is run via `npx allure@3`;
 // pass --no-allure (or run offline) to publish lightweight placeholder pages instead.
 //
-//   node scripts/demo.mjs [--site site] [--runs 12] [--no-allure] [--clean]
+//   node scripts/demo.mjs [--site .devhub-preview] [--runs 12] [--no-allure | --require-allure] [--allure-version 3]
 
 import { spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -21,6 +21,7 @@ const { values: args } = parseArgs({
     site: { type: "string", default: join(HERE, "..", ".devhub-preview") },
     runs: { type: "string", default: "12" },
     "no-allure": { type: "boolean", default: false },
+    "require-allure": { type: "boolean", default: false },
     clean: { type: "boolean", default: true },
     "allure-version": { type: "string", default: "3" },
   },
@@ -56,6 +57,10 @@ if (useAllure) {
   try {
     await run("npx", ["-y", `allure@${args["allure-version"]}`, "--version"], { quiet: true });
   } catch {
+    if (args["require-allure"]) {
+      console.error(`Allure CLI (allure@${args["allure-version"]}) is not available and --require-allure was given.`);
+      process.exit(1);
+    }
     console.warn("Allure 3 CLI not available (offline?) — publishing placeholder pages instead of real reports.");
     useAllure = false;
   }

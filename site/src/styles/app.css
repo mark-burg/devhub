@@ -593,6 +593,7 @@ a.crumb:hover { color: var(--text); }
 .md ul, .md ol { padding-left: 24px; }
 .md li + li { margin-top: 4px; }
 .md code { background: var(--surface-2); padding: 2px 5px; border-radius: 5px; font-size: 0.88em; }
+.md :not(pre) > code { overflow-wrap: anywhere; } /* long inline URLs/paths must not widen the page */
 .md pre {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 14px 16px; overflow: auto; font-size: 13px; line-height: 1.6;

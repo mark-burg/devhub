@@ -20,8 +20,8 @@ export function addPage(page: Page, item: Json): Promise<void> {
 }
 
 /** Serve a text file at a URL pattern. */
-export function serveText(page: Page, pattern: string, body: string, contentType = "text/plain"): Promise<void> {
-  return page.route(pattern, (route: Route) => route.fulfill({ body, contentType }));
+export async function serveText(page: Page, pattern: string, body: string, contentType = "text/plain"): Promise<void> {
+  await page.route(pattern, (route: Route) => route.fulfill({ body, contentType }));
 }
 
 /** Collect uncaught page errors (the iframe's own analytics noise is ignored). */

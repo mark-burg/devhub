@@ -1,9 +1,9 @@
 // @vitest-environment node
 // Tests for scripts/hub.mjs, run as a CLI exactly like the action runs it.
 
-import { describe, expect, it, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -35,6 +35,7 @@ beforeEach(() => {
   work = mkdtempSync(join(tmpdir(), "devhub-test-"));
   site = join(work, "site");
 });
+afterEach(() => rmSync(work, { recursive: true, force: true }));
 
 function publishFixture(name: string, extra: string[] = []) {
   ok(["publish", "--site", site, "--project", "p", "--report", name, "--run-id", "1", ...extra]);
@@ -46,6 +47,24 @@ describe("detection from real tool output", () => {
     const r = publishFixture("covpy", ["--source", join(FIX, "coverage-py")]);
     expect(r.type).toBe("coverage");
     expect(r.runs[0].metrics).toEqual({ coverage: 95.12, "coverage.branches": 100 });
+  });
+
+  it("coverage.py's default output (HTML only) is still a coverage report", () => {
+    const r = publishFixture("covpy-default", ["--source", join(FIX, "coverage-py-default")]);
+    expect(r.type).toBe("coverage");
+    expect(r.runs[0].metrics).toBeUndefined();
+  });
+
+  it("--type wins over detection, and numbers are still collected", () => {
+    const r = publishFixture("typed", ["--source", join(FIX, "lcov"), "--type", "html"]);
+    expect(r.type).toBe("html");
+    expect(r.runs[0].metrics).toMatchObject({ coverage: 62.5 });
+  });
+
+  it("a single coverage file as the source", () => {
+    const r = publishFixture("cobfile", ["--source", join(FIX, "cobertura/coverage.xml"), "--type", "coverage"]);
+    expect(r.runs[0].entry).toBe("coverage.xml");
+    expect(r.runs[0].metrics).toEqual({ coverage: 93.94, "coverage.branches": 100 });
   });
 
   it("Cobertura XML", () => {

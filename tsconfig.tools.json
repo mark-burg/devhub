@@ -1,0 +1,9 @@
+{
+  // Type-checks the test and tooling code that runs in Node (the site itself uses tsconfig.json).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["e2e", "test", "playwright.config.ts"]
+}

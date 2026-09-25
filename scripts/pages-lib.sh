@@ -26,7 +26,9 @@ pages_clone() {
   if git ls-remote --exit-code --heads "$remote" "$branch" >/dev/null 2>&1; then
     git clone --quiet --depth 1 --branch "$branch" "$remote" "$dir"
   else
-    echo "Branch '$branch' does not exist in ${HUB_REPO} yet — it will be created."
+    local where="${HUB_REPO}"
+    [ -n "${HUB_REMOTE_URL:-}" ] && where="the configured remote"
+    echo "Branch '$branch' does not exist in ${where} yet — it will be created."
     git init --quiet "$dir"
     git -C "$dir" checkout --quiet --orphan "$branch"
     git -C "$dir" remote add origin "$remote"

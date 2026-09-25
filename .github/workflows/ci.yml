@@ -1,5 +1,9 @@
 name: CI
 
+# Read-only: nothing in CI may push. The action job publishes to a throwaway local remote.
+permissions:
+  contents: read
+
 on:
   pull_request:
   push:
@@ -95,6 +99,7 @@ jobs:
         id: allure
         uses: ./
         with:
+          token: ""
           project: ci
           report: allure
           allure-results: allure-results
@@ -104,6 +109,7 @@ jobs:
         id: allure2
         uses: ./
         with:
+          token: ""
           project: ci
           report: allure
           allure-results: allure-results
@@ -114,6 +120,7 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
+          token: ""
           project: ci
           report: gated
           allure-results: allure-results
@@ -123,6 +130,7 @@ jobs:
         id: junit
         uses: ./
         with:
+          token: ""
           project: ci
           report: junit
           report-dir: test/fixtures/junit
@@ -132,6 +140,7 @@ jobs:
         id: pw
         uses: ./
         with:
+          token: ""
           project: ci
           report: playwright
           type: playwright
@@ -142,6 +151,7 @@ jobs:
         id: cov
         uses: ./
         with:
+          token: ""
           project: ci
           report: coverage
           report-dir: test/fixtures/jacoco
@@ -151,6 +161,7 @@ jobs:
         id: metrics
         uses: ./
         with:
+          token: ""
           project: ci
           report: bundle
           metrics: |
@@ -162,6 +173,7 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
+          token: ""
           project: ci
 
       - name: Check outputs and the published branch
@@ -176,6 +188,8 @@ jobs:
           COV_STATUS: ${{ steps.cov.outputs.status }}
           EMPTY: ${{ steps.empty.outcome }}
           BADGE: ${{ steps.junit.outputs.badge-url }}
+          # PR runs record the PR head commit (GITHUB_SHA is the merge commit there).
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           fail() { echo "::error::$*"; exit 1; }
@@ -200,7 +214,7 @@ jobs:
           assert(r("ci", "allure").runs[0].entry === "awesome/", "multi-plugin report opens awesome/");
           assert(r("ci", "coverage").type === "coverage" && r("ci", "coverage").runs[0].metrics.coverage === 88.89, "jacoco coverage");
           assert(r("ci", "bundle").runs[0].metrics["bundle.size"] === 412 && r("ci", "bundle").runs[0].metrics.lcp_ms === 1830, "metrics");
-          assert(r("ci", "junit").runs[0].git.commit === process.env.GITHUB_SHA, "git metadata");
+          assert(r("ci", "junit").runs[0].git.commit === process.env.EXPECTED_SHA, `git metadata: ${r("ci", "junit").runs[0].git.commit} != ${process.env.EXPECTED_SHA}`);
           const history = fs.readFileSync("/tmp/hub/reports/ci/allure/history.jsonl", "utf8").trim().split("\n");
           assert(history.length === 2, `history has ${history.length} entries, expected 2`);
           assert(fs.existsSync("/tmp/hub/reports/ci/allure/latest/index.html"), "latest redirect");

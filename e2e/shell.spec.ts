@@ -108,10 +108,14 @@ test.describe("shell", () => {
       await page.locator(".sb-item", { hasText: "Activity" }).click();
       await expect(page).toHaveURL(/#\/activity/);
       await expect(page.locator(".app")).not.toHaveClass(/nav-open/);
-      for (const route of ["#/", "#/p/shop-web", "#/activity", "#/r/shop-web/e2e", "#/page/publishing"]) {
+      for (const route of ["#/", "#/p/shop-web", "#/activity", "#/r/shop-web/e2e", "#/page/publishing", "#/page/how-it-works", "#/page/benchmarks", "#/nope"]) {
         await page.goto(route);
         await page.waitForTimeout(300);
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        // The document never scrolls (the app is 100vh); main.view is the scroller.
+        const overflow = await page.evaluate(() => {
+          const view = document.querySelector("main.view")!;
+          return Math.max(view.scrollWidth - view.clientWidth, document.documentElement.scrollWidth - window.innerWidth);
+        });
         expect(overflow, `horizontal overflow on ${route}`).toBeLessThanOrEqual(0);
       }
     });

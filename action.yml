@@ -275,7 +275,8 @@ runs:
         node "$hub" gh-summary --result "$WORK/result.json"
         # The site shell is built and deployed by the hub's own "Deploy hub site" workflow.
         if [ ! -f "$WORK/pages/index.html" ]; then
-          echo "::warning::Published, but ${HUB_REPO}@${HUB_BRANCH} has no site yet. Run the \"Deploy hub site\" workflow in ${HUB_REPO} once to build and deploy it."
+          where="${HUB_REPO}"; [ -n "${HUB_REMOTE_URL:-}" ] && where="the configured remote"
+          echo "::warning::Published, but ${where}@${HUB_BRANCH} has no site yet. Run the \"Deploy hub site\" workflow in the hub repository once to build and deploy it."
         fi
 
     - name: Fail on test failures

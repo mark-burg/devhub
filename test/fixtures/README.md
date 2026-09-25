@@ -6,6 +6,7 @@ Real output from each tool, generated on a throwaway sample project and trimmed 
 | Folder | Produced by | Kept verbatim |
 |---|---|---|
 | `coverage-py/` | coverage.py 7.16 (`coverage json`, `coverage html`) | `coverage.json`; hashed asset name |
+| `coverage-py-default/` | coverage.py `coverage html` only (its default output — no numbers) | hashed asset name |
 | `cobertura/` | coverage.py `coverage xml` (Cobertura format) | `coverage.xml` |
 | `jacoco/` | JaCoCo 0.8.15 CLI | `jacoco.xml`, `jacoco-sessions.html` |
 | `junit/` | pytest 8 `--junitxml` (no totals on `<testsuites>`) | `pytest.xml` |

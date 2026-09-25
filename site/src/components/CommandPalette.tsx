@@ -113,7 +113,7 @@ export function CommandPalette({ hub }: { hub: Hub }) {
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "ArrowDown") setSelected((s) => Math.min(results.length - 1, s + 1));
+    if (e.key === "ArrowDown") setSelected((s) => Math.max(0, Math.min(results.length - 1, s + 1)));
     else if (e.key === "ArrowUp") setSelected((s) => Math.max(0, s - 1));
     else if (e.key === "Enter") choose(results[selected]);
     else return;
@@ -139,7 +139,7 @@ export function CommandPalette({ hub }: { hub: Hub }) {
             spellcheck={false}
             role="combobox"
             aria-label="Search projects, reports, runs and pages"
-            aria-expanded={open}
+            aria-expanded={open && results.length > 0}
             aria-autocomplete="list"
             aria-controls="palette-list"
             aria-activedescendant={results.length ? `palette-opt-${selected}` : undefined}
@@ -149,8 +149,8 @@ export function CommandPalette({ hub }: { hub: Hub }) {
           />
           <kbd>esc</kbd>
         </div>
-        <ul class="palette-list" id="palette-list" role="listbox" aria-label="Results" tabIndex={-1} ref={list}>
-          {results.length ? results.map((it, i) => (
+        <ul class="palette-list" id="palette-list" role="listbox" aria-label="Results" tabIndex={-1} ref={list} hidden={!results.length}>
+          {results.map((it, i) => (
             <li
               key={it.href + it.label}
               id={`palette-opt-${i}`}
@@ -167,8 +167,9 @@ export function CommandPalette({ hub }: { hub: Hub }) {
               </span>
               {it.external ? <Icon name="external" class="muted" /> : null}
             </li>
-          )) : <li class="palette-empty">No matches</li>}
+          ))}
         </ul>
+        {results.length ? null : <div class="palette-empty" role="status">No matches</div>}
       </div>
     </dialog>
   );

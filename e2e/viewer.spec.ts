@@ -27,6 +27,37 @@ test.describe("report viewer", () => {
     await expect(select.locator("option[value='140']")).toBeDisabled();
   });
 
+  test("[ and ] keep working after navigating to the same run another way", async ({ page }) => {
+    const crumb = page.locator(".crumb.current");
+    await page.goto("#/r/shop-web/e2e/150");
+    await expect(crumb).toHaveText("#150");
+    await page.locator(".topbar").click({ position: { x: 600, y: 20 } });
+    await page.keyboard.press("]");
+    await expect(crumb).toHaveText("#151");
+    // "E2E tests" in the sidebar is #/r/shop-web/e2e, i.e. "latest" = the run already open.
+    await page.locator(".sb-item", { hasText: "E2E tests" }).click();
+    await expect(page).toHaveURL(/#\/r\/shop-web\/e2e$/);
+    await page.locator(".topbar").click({ position: { x: 600, y: 20 } });
+    await page.keyboard.press("[");
+    await expect(crumb).toHaveText("#150");
+    // A hand-edited ?at= on the current run doesn't remount the view either.
+    await page.evaluate(() => { location.hash = "#/r/shop-web/e2e/150?at=somewhere"; });
+    await page.keyboard.press("[");
+    await expect(crumb).toHaveText("#149");
+  });
+
+  test("two keys in one burst move one run, not two", async ({ page }) => {
+    const crumb = page.locator(".crumb.current");
+    await page.goto("#/r/shop-web/e2e/150");
+    await expect(crumb).toHaveText("#150");
+    await page.evaluate(() => {
+      for (const key of ["[", "]"]) document.body.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+    });
+    await expect(crumb).toHaveText("#149");
+    await page.waitForTimeout(300);
+    await expect(crumb).toHaveText("#149");
+  });
+
   test("focus mode hides the chrome and Esc restores it", async ({ page }) => {
     await page.goto("#/r/shop-web/e2e");
     await page.getByTitle("Focus mode (f)").click();
