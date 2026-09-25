@@ -8,6 +8,7 @@ import { slugify } from "../../lib/format";
 import { routes } from "../../router";
 import { isDark } from "../../state";
 import { ErrorBox, Loading, Page } from "../../components/ui";
+import { syncScrollableTabStops } from "../../lib/useHorizontalOverflow";
 
 interface TocEntry { id: string; text: string; level: 2 | 3 }
 type State = { html: string; toc: TocEntry[] } | { error: string } | null;
@@ -47,7 +48,15 @@ export function Markdown({ hub, page }: { hub: Hub; page: NavItem }) {
 
   // Highlight code and draw diagrams after the HTML is in the DOM; redraw diagrams on theme change.
   useEffect(() => {
-    if (article.current && state && "html" in state) enhance(article.current, dark).catch(() => { /* leave source visible */ });
+    const el = article.current;
+    if (!el || !state || !("html" in state)) return;
+    const tabStops = () => syncScrollableTabStops(el, "pre, .table-wrap");
+    enhance(el, dark).catch(() => { /* leave source visible */ }).finally(tabStops);
+    tabStops();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(tabStops); // wide code blocks only scroll on narrow screens
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [state, dark]);
 
   // In-document anchors must not hit the hash router.

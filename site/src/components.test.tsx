@@ -11,7 +11,7 @@ import { hub } from "./test/fixtures";
 describe("RunsTable", () => {
   it("links live runs, marks archived ones and dashes runs without stats", () => {
     const h = hub();
-    render(<RunsTable rows={allRuns(h)} showReport />);
+    render(<RunsTable rows={allRuns(h)} label="Runs" showReport />);
     expect(screen.getAllByRole("link", { name: "#3" })[0].getAttribute("href")).toBe("#/r/web/e2e/3");
     const archived = screen.getByTitle(/Report files were pruned/);
     expect(archived.tagName).toBe("SPAN");
@@ -22,7 +22,7 @@ describe("RunsTable", () => {
   it("expands beyond the limit on request", () => {
     const h = hub();
     const rows = getReport(h, "web", "e2e")!.runs.map((run) => ({ project: h.projects[0], report: getReport(h, "web", "e2e")!, run }));
-    render(<RunsTable rows={rows} limit={2} />);
+    render(<RunsTable rows={rows} label="Runs" limit={2} />);
     expect(screen.getAllByRole("row")).toHaveLength(3); // header + 2
     fireEvent.click(screen.getByRole("button", { name: /Show all 3 runs/ }));
     expect(screen.getAllByRole("row")).toHaveLength(4);

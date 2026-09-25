@@ -1,0 +1,27 @@
+{
+  "lighthouseVersion": "12.8.2",
+  "requestedUrl": "http://localhost/devhub/",
+  "fetchTime": "2026-09-25T05:52:54.963Z",
+  "categories": {
+    "performance": {
+      "id": "performance",
+      "title": "Performance",
+      "score": 0.99
+    },
+    "accessibility": {
+      "id": "accessibility",
+      "title": "Accessibility",
+      "score": 1
+    },
+    "best-practices": {
+      "id": "best-practices",
+      "title": "Best Practices",
+      "score": 1
+    },
+    "seo": {
+      "id": "seo",
+      "title": "SEO",
+      "score": 1
+    }
+  }
+}

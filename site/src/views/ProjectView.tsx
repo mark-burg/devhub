@@ -51,7 +51,7 @@ function ReportSection({ hub, report, runs, branch }: { hub: Hub; report: Report
   const openRun = (i: number) => { const r = chrono[i]; if (r && !r.pruned) go(["r", project.id, report.id, r.id]); };
   const tipTitle = (i: number) => `${chrono[i].label} · ${new Date(chrono[i].createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
   const tipFoot = (i: number) => [chrono[i].git?.branch, chrono[i].git?.message].filter(Boolean).join(" · ");
-  const chartProps = { labels, tipTitle, tipFoot, onSelect: openRun };
+  const chartProps = { labels, tipTitle, tipFoot, onSelect: openRun, isSelectable: (i: number) => !!chrono[i] && !chrono[i].pruned };
 
   const head = (
     <div class="report-head">
@@ -132,7 +132,7 @@ function ReportSection({ hub, report, runs, branch }: { hub: Hub; report: Report
 
       <h3 class="table-title">Runs</h3>
       <div class="report-table">
-        <RunsTable rows={runs.map((run) => ({ project, report, run }))} metricCols={metricCols} limit={10} />
+        <RunsTable rows={runs.map((run) => ({ project, report, run }))} label={`${report.title} runs`} metricCols={metricCols} limit={10} />
       </div>
     </section>
   );

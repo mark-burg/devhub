@@ -91,7 +91,7 @@ export function Dashboard({ hub }: { hub: Hub }) {
           <h2 class="section-title"><Icon name="activity" />Recent activity</h2>
           <Button href={routes.activity()} icon="chevron-right" trailing>All activity</Button>
         </div>
-        <div class="card"><RunsTable rows={runs} showReport limit={8} expandable={false} /></div>
+        <div class="card"><RunsTable rows={runs} label="Recent activity" showReport limit={8} expandable={false} /></div>
       </section>
     </Page>
   );

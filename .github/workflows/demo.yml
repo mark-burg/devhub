@@ -41,9 +41,10 @@ jobs:
           allure-results: allure-results
           keep: 15
 
+  # The three jobs publish at the same time, like separate projects would, so this also
+  # exercises the rebuild-and-retry path when pushes to gh-pages collide.
   api:
     runs-on: ubuntu-latest
-    needs: e2e # serialize demo pushes; real projects can publish in parallel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,7 +63,6 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
-    needs: api
     steps:
       - uses: actions/checkout@v4
       # Stand-in for e.g. `npx vitest run --coverage --coverage.reporter=html --coverage.reporter=json-summary`

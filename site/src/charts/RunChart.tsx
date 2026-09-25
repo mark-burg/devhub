@@ -36,6 +36,8 @@ export interface RunChartProps {
   tipTitle?: (i: number) => string;
   tipFoot?: (i: number) => string;
   onSelect?: (i: number) => void;
+  /** Columns that can't be opened (e.g. archived runs) get no hint, pointer or click. */
+  isSelectable?: (i: number) => boolean;
   ariaLabel?: string;
 }
 
@@ -96,6 +98,8 @@ export function computeLayout(p: RunChartProps, W: number): Layout {
 
 export function RunChart(props: RunChartProps) {
   const { kind, labels, series, onSelect } = props;
+  const canSelect = (i: number) => !!onSelect && i >= 0 && (props.isSelectable?.(i) ?? true);
+  const select = (i: number) => { if (canSelect(i)) onSelect!(i); };
   const H = props.height ?? 180;
   const n = labels.length;
   const isStack = kind === "stack";
@@ -127,7 +131,7 @@ export function RunChart(props: RunChartProps) {
   const onKeyDown = (e: JSX.TargetedKeyboardEvent<SVGSVGElement>) => {
     if (e.key === "ArrowLeft") setActive((a) => Math.max(0, (a < 0 ? n : a) - 1));
     else if (e.key === "ArrowRight") setActive((a) => Math.min(n - 1, a + 1));
-    else if (e.key === "Enter" && active >= 0) onSelect?.(active);
+    else if (e.key === "Enter" && active >= 0) select(active);
     else if (e.key === "Escape") { setActive(-1); e.currentTarget.blur(); }
     else return;
     e.preventDefault();
@@ -154,7 +158,7 @@ export function RunChart(props: RunChartProps) {
             viewBox={`0 0 ${W} ${H}`}
             class="chart-svg"
             role="img"
-            tabIndex={0}
+            tabindex={0} // lowercase: SVG attribute names are case-sensitive (camelCase is ignored by WebKit/Firefox)
             aria-label={props.ariaLabel ?? ""}
             onFocus={() => setActive((a) => (a >= 0 ? a : n - 1))}
             onBlur={() => setActive(-1)}
@@ -172,10 +176,10 @@ export function RunChart(props: RunChartProps) {
               y={0}
               width={L.pw}
               height={H}
-              class={onSelect ? "hit clickable" : "hit"}
+              class={canSelect(active) ? "hit clickable" : "hit"}
               onPointerMove={(e) => setActive(indexAt(e))}
               onPointerLeave={() => { if (document.activeElement !== svgRef.current) setActive(-1); }}
-              onClick={(e) => onSelect?.(indexAt(e))}
+              onClick={(e) => select(indexAt(e))}
             />
           </svg>
         ) : null}
@@ -190,7 +194,7 @@ export function RunChart(props: RunChartProps) {
               </div>
             ))}
             {props.tipFoot && props.tipFoot(active) ? <div class="tip-foot">{props.tipFoot(active)}</div> : null}
-            {onSelect ? <div class="tip-hint">Click to open</div> : null}
+            {canSelect(active) ? <div class="tip-hint">Click to open</div> : null}
           </div>
         ) : null}
       </div>

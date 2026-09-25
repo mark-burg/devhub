@@ -4,7 +4,9 @@
 // one containing a path wins — which mirrors gh-pages, where the built shell and published
 // content sit side by side:
 //
-//   node scripts/serve.mjs dist .devhub-preview [--port 4173]
+//   node scripts/serve.mjs dist .devhub-preview [--port 4173] [--prefix /devhub/]
+//
+// --prefix serves everything below a sub-path, like a GitHub Pages project site.
 
 import { createServer } from "node:http";
 import { createReadStream, existsSync, statSync } from "node:fs";
@@ -24,9 +26,11 @@ const TYPES = {
 /**
  * Returns a Node/Connect-style handler serving files from `roots` (first match wins).
  * `accept(pathname)` limits which paths are handled; others go to `next()` or 404.
+ * `prefix` (e.g. "/devhub/") mounts the roots below a sub-path.
  */
-export function createStaticHandler(roots, { accept = () => true } = {}) {
+export function createStaticHandler(roots, { accept = () => true, prefix = "/" } = {}) {
   const dirs = roots.map((r) => resolve(r));
+  const mount = `/${prefix.replace(/^\/+|\/+$/g, "")}/`.replace(/^\/\/$/, "/");
   return (req, res, next) => {
     let url;
     try {
@@ -35,8 +39,13 @@ export function createStaticHandler(roots, { accept = () => true } = {}) {
       res.writeHead(400).end();
       return;
     }
+    if (mount !== "/") {
+      if (`${url.pathname}/` === mount) { res.writeHead(301, { Location: `${mount}${url.search}` }).end(); return; }
+      if (!url.pathname.startsWith(mount)) return next ? next() : notFound(res);
+    }
+    const sitePath = url.pathname.slice(mount.length - 1);
     let pathname;
-    try { pathname = decodeURIComponent(url.pathname); } catch { pathname = url.pathname; }
+    try { pathname = decodeURIComponent(sitePath); } catch { pathname = sitePath; }
     if (!accept(pathname)) return next ? next() : notFound(res);
     for (const root of dirs) {
       let file = normalize(join(root, pathname));
@@ -60,7 +69,10 @@ function notFound(res) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { values, positionals } = parseArgs({ allowPositionals: true, options: { port: { type: "string", default: process.env.PORT ?? "4173" } } });
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    options: { port: { type: "string", default: process.env.PORT ?? "4173" }, prefix: { type: "string", default: "/" } },
+  });
   const here = fileURLToPath(new URL(".", import.meta.url));
   const roots = positionals.length ? positionals : [join(here, "..", "dist"), join(here, "..", ".devhub-preview")];
   const missing = roots.filter((r) => !existsSync(r));
@@ -68,7 +80,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.error(`Nothing to serve: ${roots.join(", ")} not found. Run \`npm run build\` (and \`npm run demo\` for sample data).`);
     process.exit(1);
   }
-  createServer(createStaticHandler(roots.filter((r) => existsSync(r)))).listen(Number(values.port), () => {
-    console.log(`Serving ${roots.join(" + ")} at http://localhost:${values.port}/`);
+  const handler = createStaticHandler(roots.filter((r) => existsSync(r)), { prefix: values.prefix });
+  createServer(handler).listen(Number(values.port), () => {
+    console.log(`Serving ${roots.join(" + ")} at http://localhost:${values.port}${values.prefix.startsWith("/") ? "" : "/"}${values.prefix}`);
   });
 }

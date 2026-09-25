@@ -28,7 +28,7 @@ export function Activity({ hub, query }: { hub: Hub; query: URLSearchParams }) {
           options={[{ value: "", label: "All branches" }, ...branchesOf(every.map((x) => x.run)).map((b) => ({ value: b, label: b }))]} />
       </div>
       <div class="card">
-        {rows.length ? <RunsTable rows={rows} showReport limit={50} /> : <EmptyState title="No runs match these filters" />}
+        {rows.length ? <RunsTable rows={rows} label="Activity" showReport limit={50} /> : <EmptyState title="No runs match these filters" />}
       </div>
     </Page>
   );

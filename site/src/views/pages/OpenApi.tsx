@@ -8,10 +8,11 @@ import { Button } from "../../components/ui";
 import { absUrl } from "./Markdown";
 
 const CDN = {
-  swaggerCss: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
-  swaggerJs: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
-  redoc: "https://cdn.jsdelivr.net/npm/redoc@2/bundles/redoc.standalone.js",
-  scalar: "https://cdn.jsdelivr.net/npm/@scalar/api-reference",
+  // Exact versions, so a new release can't change or break the page unannounced.
+  swaggerCss: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui.css",
+  swaggerJs: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.0/swagger-ui-bundle.js",
+  redoc: "https://cdn.jsdelivr.net/npm/redoc@2.5.4/bundles/redoc.standalone.js",
+  scalar: "https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.72.1",
 };
 
 export function openApiDocument(renderer: OpenApiRenderer, specUrl: string, opts: { dark: boolean; tryItOut?: boolean }): string {

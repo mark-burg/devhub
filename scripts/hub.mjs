@@ -114,7 +114,10 @@ async function publish() {
   const project = upsert(manifest.projects, projectId, () => ({ id: projectId, title: titleize(projectId), reports: [] }));
   if (opt["project-title"]) project.title = opt["project-title"];
 
-  const detected = source ? detectType(source) : null;
+  // Scan a report folder for coverage / Lighthouse numbers once; used for both the type and the metrics.
+  const sourceIsDir = !!source && statSync(source).isDirectory();
+  let autoMetrics = sourceIsDir ? detectMetrics(source) : null;
+  const detected = source && !opt.type ? detectType(source, autoMetrics) : null;
   const report = upsert(project.reports, reportId, () => ({
     id: reportId,
     title: titleize(reportId),
@@ -160,8 +163,9 @@ async function publish() {
     if (Number.isFinite(stats.durationMs)) run.durationMs = Math.round(stats.durationMs);
   }
 
-  // Numeric metrics (coverage, lighthouse, custom)
-  const metrics = { ...(source && existsSync(runDir) ? detectMetrics(runDir) : {}), ...readMetricsFile(opt["metrics-file"]), ...parseMetricFlags(opt.metric) };
+  // Numeric metrics (coverage, lighthouse, custom). A single-file source is scanned where it was copied.
+  if (source && !sourceIsDir) autoMetrics = detectMetrics(runDir);
+  const metrics = { ...(autoMetrics ?? {}), ...readMetricsFile(opt["metrics-file"]), ...parseMetricFlags(opt.metric) };
   if (Object.keys(metrics).length) run.metrics = metrics;
 
   const git = compact({
@@ -465,14 +469,19 @@ function mergeHistory(fresh, stored, limit) {
 
 // ───────────────────────────── detection ─────────────────────────────
 
-function detectType(source) {
+function detectType(source, metrics) {
   if (statSync(source).isFile()) return /lighthouse|\.report\.html$/i.test(source) ? "lighthouse" : "html";
   const has = (p) => existsSync(join(source, p));
   if (has("summary.json") && readJSON(join(source, "summary.json"))?.stats) return "allure";
   if (has("widgets/summary.json") || has("data/test-results") || has("awesome/summary.json")) return "allure";
-  if (has("coverage-summary.json") || has("lcov-report") || has("lcov.info") || has("coverage_html.js") || has("jacoco-sessions.html") || has("cobertura-coverage.xml")) return "coverage";
+  if (has("coverage-summary.json") || has("lcov-report") || has("lcov.info") || has("jacoco-sessions.html") || has("cobertura-coverage.xml")) return "coverage";
+  // coverage.py HTML: coverage_html.js, or coverage_html_cb_<hash>.js since coverage.py 7.5
+  if (readdirSync(source).some((f) => /^coverage_html(_cb_[0-9a-f]+)?\.js$/.test(f))) return "coverage";
   if (has("index.html") && /playwright/i.test(safeRead(join(source, "index.html"), 4000))) return "playwright";
   if (findFiles(source, (f) => /\.report\.json$|^lhr.*\.json$/i.test(f), 1).length) return "lighthouse";
+  // Anything else carrying coverage numbers, e.g. a folder with Cobertura (coverage.xml) or JaCoCo XML.
+  // Pass --type to override (say, a test report that happens to ship an lcov.info).
+  if (Object.keys(metrics ?? {}).some((k) => k.startsWith("coverage"))) return "coverage";
   return null;
 }
 

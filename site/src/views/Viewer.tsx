@@ -37,6 +37,9 @@ export function Viewer({ report, run, runParam, at }: Props) {
   const lastInner = useRef(at);
   const poll = useRef<ReturnType<typeof setInterval>>();
   const dark = isDark.value;
+  // Set once this view has asked to navigate away. [ and ] always target another run, so the
+  // view remounts (fresh ref); until then, further keys must not act on this stale view.
+  const leaving = useRef(false);
 
   const innerHash = () => {
     try {
@@ -86,8 +89,11 @@ export function Viewer({ report, run, runParam, at }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.target as Element | null)?.closest?.("input, select, textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "[" && older) go(["r", pid, rid, older.id]);
-      else if (e.key === "]" && newer) go(["r", pid, rid, newer.id]);
+      if (leaving.current) return;
+      const target = e.key === "[" ? older : e.key === "]" ? newer : undefined;
+      if (!target) return;
+      leaving.current = true;
+      go(["r", pid, rid, target.id]);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

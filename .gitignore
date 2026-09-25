@@ -4,3 +4,8 @@ node_modules/
 dist/
 # Demo/preview content from `npm run demo` — on GitHub, reports and data live on gh-pages only
 .devhub-preview/
+
+# End-to-end tests
+e2e/.data/
+test-results/
+playwright-report/

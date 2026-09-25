@@ -31,9 +31,9 @@ export default defineConfig({
   },
   server: { port: 5173 },
   test: {
-    root: "site",
-    environment: "jsdom",
-    include: ["src/**/*.test.{ts,tsx}"],
-    setupFiles: ["src/test/setup.ts"],
+    root: here,
+    environment: "jsdom", // hub CLI tests opt into node with a @vitest-environment docblock
+    include: ["site/src/**/*.test.{ts,tsx}", "test/**/*.test.ts"],
+    setupFiles: ["site/src/test/setup.ts"],
   },
 });
