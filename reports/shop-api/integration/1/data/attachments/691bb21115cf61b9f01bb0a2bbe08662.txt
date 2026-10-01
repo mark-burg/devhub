@@ -1,0 +1,2 @@
+[2026-09-25T05:01:38.260Z] starting PATCH /users/:id is idempotent
+[2026-09-25T05:01:39.384Z] finished with status=passed

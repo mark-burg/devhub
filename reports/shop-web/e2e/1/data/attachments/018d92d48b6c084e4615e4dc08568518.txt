@@ -1,0 +1,2 @@
+[2026-09-25T05:03:28.072Z] starting Order confirmation email
+[2026-09-25T05:03:29.264Z] finished with status=passed

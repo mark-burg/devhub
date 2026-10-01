@@ -1,0 +1,2 @@
+[2026-09-25T05:03:48.561Z] starting Upload avatar
+[2026-09-25T05:03:50.821Z] finished with status=passed

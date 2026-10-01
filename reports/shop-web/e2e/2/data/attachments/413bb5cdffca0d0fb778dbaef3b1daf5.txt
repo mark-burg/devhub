@@ -1,0 +1,2 @@
+[2026-09-25T05:46:02.464Z] starting 3-D Secure challenge flow
+[2026-09-25T05:46:06.426Z] finished with status=passed

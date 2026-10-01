@@ -1,0 +1,195 @@
+{
+ "schema": 1,
+ "projects": [
+  {
+   "id": "shop-api",
+   "title": "Shop API",
+   "reports": [
+    {
+     "id": "integration",
+     "title": "Integration tests",
+     "type": "allure",
+     "runs": [
+      {
+       "id": "2",
+       "label": "#2",
+       "createdAt": "2026-09-25T05:59:21.324Z",
+       "path": "reports/shop-api/integration/2/",
+       "status": "failed",
+       "stats": {
+        "total": 17,
+        "passed": 15,
+        "failed": 1,
+        "skipped": 1,
+        "retries": 1
+       },
+       "durationMs": 30509,
+       "git": {
+        "branch": "test-gaps",
+        "commit": "6ab9023aa23f0f8d85bb0acb873f89e941c2d80c",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36100841270",
+        "runNumber": 2,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      },
+      {
+       "id": "1",
+       "label": "#1",
+       "createdAt": "2026-09-25T05:16:40.804Z",
+       "path": "reports/shop-api/integration/1/",
+       "status": "passed",
+       "stats": {
+        "total": 17,
+        "passed": 17,
+        "retries": 1
+       },
+       "durationMs": 35503,
+       "git": {
+        "branch": "main",
+        "commit": "f476fd162bd3bc8f05315ae840b914fc3963a399",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36097846682",
+        "runNumber": 1,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "shop-web",
+   "title": "Shop Web",
+   "reports": [
+    {
+     "id": "e2e",
+     "title": "E2E tests",
+     "type": "allure",
+     "runs": [
+      {
+       "id": "2",
+       "label": "#2",
+       "createdAt": "2026-09-25T05:59:15.778Z",
+       "path": "reports/shop-web/e2e/2/",
+       "status": "failed",
+       "stats": {
+        "total": 47,
+        "passed": 42,
+        "failed": 3,
+        "broken": 1,
+        "skipped": 1,
+        "retries": 5
+       },
+       "durationMs": 127418,
+       "git": {
+        "branch": "test-gaps",
+        "commit": "6ab9023aa23f0f8d85bb0acb873f89e941c2d80c",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36100841270",
+        "runNumber": 2,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      },
+      {
+       "id": "1",
+       "label": "#1",
+       "createdAt": "2026-09-25T05:16:23.809Z",
+       "path": "reports/shop-web/e2e/1/",
+       "status": "failed",
+       "stats": {
+        "total": 47,
+        "passed": 41,
+        "failed": 2,
+        "broken": 1,
+        "skipped": 3,
+        "retries": 6
+       },
+       "durationMs": 158910,
+       "git": {
+        "branch": "main",
+        "commit": "f476fd162bd3bc8f05315ae840b914fc3963a399",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36097846682",
+        "runNumber": 1,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      }
+     ]
+    },
+    {
+     "id": "coverage",
+     "title": "Unit coverage",
+     "type": "coverage",
+     "runs": [
+      {
+       "id": "2",
+       "label": "#2",
+       "createdAt": "2026-09-25T05:59:07.349Z",
+       "path": "reports/shop-web/coverage/2/",
+       "metrics": {
+        "coverage": 72,
+        "coverage.statements": 71,
+        "coverage.branches": 60,
+        "coverage.functions": 66
+       },
+       "git": {
+        "branch": "test-gaps",
+        "commit": "6ab9023aa23f0f8d85bb0acb873f89e941c2d80c",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36100841270",
+        "runNumber": 2,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      },
+      {
+       "id": "1",
+       "label": "#1",
+       "createdAt": "2026-09-25T05:16:49.784Z",
+       "path": "reports/shop-web/coverage/1/",
+       "metrics": {
+        "coverage": 71,
+        "coverage.statements": 70,
+        "coverage.branches": 59,
+        "coverage.functions": 65
+       },
+       "git": {
+        "branch": "main",
+        "commit": "f476fd162bd3bc8f05315ae840b914fc3963a399",
+        "author": "mark-burg"
+       },
+       "ci": {
+        "runUrl": "https://github.com/mark-burg/devhub/actions/runs/36097846682",
+        "runNumber": 1,
+        "workflow": "Demo reports",
+        "event": "workflow_dispatch",
+        "repo": "mark-burg/devhub"
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "generatedAt": "2026-09-25T06:16:51.079Z"
+}

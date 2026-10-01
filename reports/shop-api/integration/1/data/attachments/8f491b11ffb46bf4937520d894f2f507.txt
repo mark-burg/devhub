@@ -1,0 +1,2 @@
+[2026-09-25T05:01:56.718Z] starting Revoked token is rejected
+[2026-09-25T05:01:59.414Z] finished with status=passed

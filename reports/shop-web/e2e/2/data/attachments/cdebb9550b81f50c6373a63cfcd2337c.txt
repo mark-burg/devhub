@@ -1,0 +1,2 @@
+[2026-09-25T05:44:59.835Z] starting Quantity cannot go below one
+[2026-09-25T05:45:00.650Z] finished with status=passed

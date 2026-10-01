@@ -1,0 +1,46 @@
+{
+  "title": "Dev Hub",
+  "tagline": "Test reports, coverage & developer docs",
+
+  "projects": {
+    "shop-web": {
+      "title": "Shop Web",
+      "description": "Storefront — Playwright E2E suite and unit-test coverage",
+      "defaultBranch": "main"
+    },
+    "shop-api": {
+      "title": "Shop API",
+      "description": "REST API — integration tests against Postgres",
+      "defaultBranch": "main"
+    }
+  },
+
+  "metrics": {
+    "bundle.size": { "title": "Bundle size", "unit": "kB", "better": "lower", "digits": 0 }
+  },
+
+  "nav": [
+    {
+      "group": "Docs",
+      "items": [
+        { "id": "publishing", "title": "Publishing guide", "type": "markdown", "src": "docs/publishing.md", "icon": "book" },
+        { "id": "how-it-works", "title": "How it works", "type": "markdown", "src": "docs/how-it-works.md" }
+      ]
+    },
+    {
+      "group": "Examples",
+      "items": [
+        { "id": "shop-api-reference", "title": "Shop API reference", "type": "openapi", "src": "docs/examples/openapi.json", "renderer": "scalar" },
+        { "id": "benchmarks", "title": "Benchmarks", "type": "benchmark", "src": "docs/examples/benchmark-data.js", "description": "github-action-benchmark results, one chart per benchmark" },
+        { "id": "suite-duration", "title": "Suite duration", "type": "vega", "src": "docs/examples/suite-duration.vl.json", "description": "A Vega-Lite chart reading data/runs.json" }
+      ]
+    },
+    {
+      "group": "Links",
+      "items": [
+        { "title": "Allure 3 docs", "href": "https://allurereport.org/docs/" },
+        { "title": "GitHub Actions", "href": "https://github.com/features/actions" }
+      ]
+    }
+  ]
+}

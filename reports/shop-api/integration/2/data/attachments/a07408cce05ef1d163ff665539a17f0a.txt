@@ -1,0 +1,2 @@
+[2026-09-25T05:44:22.246Z] starting Access token expires after 15 minutes
+[2026-09-25T05:44:23.829Z] finished with status=passed

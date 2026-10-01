@@ -1,0 +1,2 @@
+[2026-09-25T05:03:48.117Z] starting Update display name
+[2026-09-25T05:03:48.561Z] finished with status=passed

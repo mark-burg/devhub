@@ -1,0 +1,2 @@
+[2026-09-25T05:44:43.205Z] starting SSO redirect round-trip
+[2026-09-25T05:44:44.651Z] finished with status=passed

@@ -1,0 +1,2 @@
+[2026-09-25T05:01:24.696Z] starting Login with wrong password shows error
+[2026-09-25T05:01:28.207Z] finished with status=passed

@@ -1,0 +1,2 @@
+[2026-09-25T05:44:47.278Z] starting Empty search shows suggestions
+[2026-09-25T05:44:47.602Z] finished with status=passed

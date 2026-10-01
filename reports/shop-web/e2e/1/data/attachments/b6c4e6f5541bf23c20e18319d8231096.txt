@@ -1,0 +1,2 @@
+[2026-09-25T05:01:16.042Z] starting Login with valid credentials
+[2026-09-25T05:01:18.749Z] finished with status=passed
