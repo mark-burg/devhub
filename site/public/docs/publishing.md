@@ -34,7 +34,7 @@ jobs:
       - run: npm ci && npx playwright install --with-deps
       - run: npx playwright test          # with the allure-playwright reporter
 
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}          # publish failures too
         with:
           project: web-app
@@ -59,7 +59,7 @@ cannot push to another repository, so:
 3. Point the action at the hub:
 
 ```yaml
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}
         with:
           hub-repo: OWNER/devhub
@@ -115,7 +115,7 @@ correctly:
 to the workflow run automatically. For example, to comment on a pull request:
 
 ```yaml
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         id: hub
         if: ${{ !cancelled() }}
         with: { project: web-app, report: e2e, allure-results: allure-results }
@@ -196,6 +196,71 @@ hides a project.
 - The *Compact gh-pages* workflow squashes the branch history monthly so deleted reports stop
   taking space in git.
 - Remove things by hand with `node scripts/hub.mjs remove --site <gh-pages checkout> --project <id> [--report <id>] [--run <id>]`.
+
+## Running your own hub in an organization
+
+To run a private hub for a team or company, start from a copy of this repository rather
+than pointing CI at someone else's. That way you control updates, the action is "internal"
+to your organization, and reports stay inside it.
+
+1. **Create the copy.** Go to [github.com/new/import](https://github.com/new/import), enter
+   `https://github.com/mark-burg/devhub.git` as the source, choose your organization as the
+   owner, and make it **private** (or **internal**). Unlike a fork, an imported copy can be
+   private, and because it keeps the history you can still merge upstream updates later.
+   The importer copies every branch: delete the copied `gh-pages` branch (it holds the
+   upstream demo site) so your hub starts empty.
+
+   Or from the command line, copying only `main` and the release tags into an empty private repo:
+
+   ```bash
+   git clone https://github.com/mark-burg/devhub.git && cd devhub
+   git push https://github.com/YOUR-ORG/devhub.git main --tags
+   ```
+2. **Make it yours.** In `site/public/hub.config.json`, set the title and your `projects`, and
+   remove the *Examples* nav group (and `site/public/docs/examples/` if you like). Don't run the
+   *Demo reports* workflow; you can delete `.github/workflows/demo.yml`.
+3. **Deploy.** Run **Actions → Deploy hub site** once, then set **Settings → Pages** to the
+   `gh-pages` branch, folder `/ (root)`.
+4. **Decide who can see reports.**
+   - On **GitHub Enterprise Cloud**, set **Settings → Pages → Visibility** to *Private*, so
+     only organization members can open the hub.
+   - On other plans, a Pages site is **public even when the repository is private**. Check with
+     your administrators before publishing anything internal.
+5. **Let your other repositories use the action.** In the hub repository: **Settings → Actions
+   → General → Access** → *Accessible from repositories in the organization*.
+6. **Give CI permission to publish.** Create a GitHub App (preferred) or a fine-grained token
+   with *Contents: read and write* on the hub repository only, and store it as an organization
+   secret, e.g. `DEVHUB_TOKEN`.
+7. **Publish from any repository:**
+
+   ```yaml
+   - uses: YOUR-ORG/devhub@main   # your copy, so you decide what lands on main
+     if: ${{ !cancelled() }}
+     with:
+       hub-repo: YOUR-ORG/devhub
+       token: ${{ secrets.DEVHUB_TOKEN }}
+       project: web-app
+       report: e2e
+       allure-results: allure-results
+   ```
+
+**Worth checking with your security team:**
+- Allure 3 reports include Google Analytics, which runs in viewers' browsers.
+- shields.io badges can't read a private Pages site.
+- The OpenAPI page type loads its renderer from jsDelivr.
+- Your policy for adopting open-source code. Dev Hub is MIT-licensed.
+
+**Taking upstream updates:**
+
+```bash
+git remote add upstream https://github.com/mark-burg/devhub.git
+git fetch upstream --tags --force   # --force lets the moving v1 tag update
+git merge v1                        # or a specific release, e.g. v1.1.0
+git push origin main
+```
+
+Using the upstream action directly instead of a copy? Pin `mark-burg/devhub@v1` (or a full
+commit SHA), never `@main`.
 
 ## Local preview
 

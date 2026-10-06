@@ -37,7 +37,7 @@ To put it online:
 3. Add the action to any test workflow:
 
 ```yaml
-- uses: OWNER/devhub@main
+- uses: OWNER/devhub@v1
   if: ${{ !cancelled() }}
   with:
     project: web-app
@@ -49,7 +49,8 @@ To put it online:
 
 The full guide — other tools, inputs, badges, sidebar pages, retention — is
 [site/public/docs/publishing.md](site/public/docs/publishing.md) (also rendered inside the hub).
-Copy-paste workflows are in [examples/](examples).
+Copy-paste workflows are in [examples/](examples). To run a private hub for a team, see
+[Running your own hub in an organization](site/public/docs/publishing.md#running-your-own-hub-in-an-organization).
 
 ## Development
 
@@ -99,3 +100,7 @@ node scripts/hub.mjs list    --site .devhub-preview
 node scripts/hub.mjs remove  --site .devhub-preview --project web-app --report e2e --run 142
 node scripts/hub.mjs help
 ```
+
+## License
+
+[MIT](LICENSE)

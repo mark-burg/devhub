@@ -17,7 +17,7 @@ jobs:
       - run: npm ci && npx playwright install --with-deps
       # reporter: [["html", { open: "never" }], ["json", { outputFile: "results.json" }]]
       - run: npx playwright test
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}
         with:
           hub-repo: ${{ env.HUB_REPO }}
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci
       - run: npx vitest run --coverage --coverage.reporter=html --coverage.reporter=json-summary
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         with:
           hub-repo: ${{ env.HUB_REPO }}
           token: ${{ secrets.DEVHUB_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
         run: echo "kb=$(du -sk dist | cut -f1)" >> "$GITHUB_OUTPUT"
       # Numbers only — no report files. Trended on the project page; describe the
       # metric in hub.config.json ("better": "lower", "unit": "kB").
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         with:
           hub-repo: ${{ env.HUB_REPO }}
           token: ${{ secrets.DEVHUB_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
       - run: npx @lhci/cli@0.14 collect --staticDistDir=dist && npx @lhci/cli@0.14 upload --target=filesystem --outputDir=lhci
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         with:
           hub-repo: ${{ env.HUB_REPO }}
           token: ${{ secrets.DEVHUB_TOKEN }}
@@ -87,7 +87,7 @@ jobs:
           python-version: "3.13"
       - run: pip install -r requirements.txt pytest pytest-html pytest-cov
       - run: pytest --html=report/index.html --self-contained-html --junitxml=report/junit.xml --cov=src --cov-report=html --cov-report=json:htmlcov/coverage.json
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}
         with:
           hub-repo: ${{ env.HUB_REPO }}
@@ -96,7 +96,7 @@ jobs:
           report: unit
           report-dir: report
           junit: report/junit.xml
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}
         with:
           hub-repo: ${{ env.HUB_REPO }}
@@ -111,7 +111,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm ci && npx storybook build -o storybook-static
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         with:
           hub-repo: ${{ env.HUB_REPO }}
           token: ${{ secrets.DEVHUB_TOKEN }}

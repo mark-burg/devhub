@@ -30,7 +30,7 @@ jobs:
       - name: Publish to Dev Hub
         id: hub
         if: ${{ !cancelled() }}
-        uses: OWNER/devhub@main
+        uses: OWNER/devhub@v1
         with:
           hub-repo: OWNER/devhub
           token: ${{ secrets.DEVHUB_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
       - run: pip install -r requirements.txt pytest allure-pytest
       - run: pytest --alluredir=allure-results
 
-      - uses: OWNER/devhub@main
+      - uses: OWNER/devhub@v1
         if: ${{ !cancelled() }}
         with:
           hub-repo: OWNER/devhub
