@@ -1,6 +1,6 @@
 name: "devhub publish"
 description: "Publish an Allure 3 report (with history) or any static HTML report — coverage, Playwright, Lighthouse, docs — into a GitHub Pages dev hub."
-author: "devhub"
+author: "mark-burg"
 branding:
   icon: "layers"
   color: "blue"

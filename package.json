@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "description": "A static GitHub Pages hub for Allure reports, coverage, benchmarks, API docs and other developer tooling.",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=22.12"
